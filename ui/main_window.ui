@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SF Profile Migrator by @f1r3f0x</string>
+   <string>SF Profile Merger by @f1r3f0x</string>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -367,8 +367,6 @@
    <zorder>profileSource_selector_2</zorder>
    <zorder></zorder>
    <zorder>spc_1</zorder>
-   <zorder>horizontalLayoutWidget</zorder>
-   <zorder>horizontalLayoutWidget_2</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
