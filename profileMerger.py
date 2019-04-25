@@ -55,10 +55,16 @@ class ProfileScanner(QtCore.QThread):
                     fields[tag] = child.text
 
                 profile_field = model_class()
+
+                #print(fields)
                 profile_field.set_fields(fields)
 
-                for key, value in profile_field.get_toggles().items():
-                    self.addItem.emit(f'{str(profile_field)} --- {key}:{value}')
+                toggles = profile_field.get_toggles()
+                if toggles:
+                    for key, value in toggles.items():
+                        self.addItem.emit(f'{str(profile_field)} --- {key}:{value}')
+                else:
+                    self.addItem.emit(f'{str(profile_field)}')
             #tag = profileField.tag
         #self.updateProgress.emit(999)
     
