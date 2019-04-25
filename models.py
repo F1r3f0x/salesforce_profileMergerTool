@@ -13,10 +13,7 @@ class ProfileField:
         self.model_fields = {}
 
     def get_toggles(self) -> dict:
-        return self.toggles
-    
-    def set_toggles(self, toggles: dict):
-        self.toggles = toggles
+        pass
 
     def set_fields(self, fields: dict):
         self.model_fields = fields
@@ -83,7 +80,10 @@ class ProfileApexClassAccess(ProfileField):
         self.enabled = enabled
 
         self.model_name = 'classAccesses'
-        self.toggles = {
+        self.toggles = self.get_toggles
+
+    def get_toggles(self):
+        return {
             'enabled': self.enabled
         }
 
@@ -98,7 +98,7 @@ class ProfileApexClassAccess(ProfileField):
             if field == 'apexClass':
                 self.apexClass = value
             elif field == 'enabled':
-                if value == 'true':
+                if str(value).strip() == 'true':
                     self.enabled = True
                 else:
                     self.enabled = False
