@@ -21,13 +21,13 @@ profiles_merged = {}
 class ProfileScanner(QtCore.QThread):
     # Progress Signal
     updateProgress = QtCore.Signal(int)
-    addItem = QtCore.Signal(str)
+    addItem = QtCore.Signal(dict)
 
     def __init__(self, *args, **kwargs):
         QtCore.QThread.__init__(self)
         self.profile_filepath = ''
 
-    # Overloaded, is run by calling it's start() function
+    # Overloaded, is run by calling its start() function
     def run(self):
         tree = ElementTree.parse(self.profile_filepath)
         root = tree.getroot()
@@ -39,6 +39,7 @@ class ProfileScanner(QtCore.QThread):
         print(len(root))
 
         val = 0
+        index = 0
         for profileField in root:
             ns = ns_re.match(profileField.tag).group()
             fieldType = profileField.tag.replace(ns,'')
@@ -67,9 +68,19 @@ class ProfileScanner(QtCore.QThread):
                 toggles = profile_field.get_toggles()
                 if toggles:
                     for key, value in toggles.items():
-                        self.addItem.emit(f'{str(profile_field)} --- {key}:{value}')
+                        self.addItem.emit({
+                            'label': f'{str(profile_field)} --- {key}:{value}',
+                            'obj': profile_field,
+                            'index': index
+                        })
+                        index += 1
                 else:
-                    self.addItem.emit(f'{str(profile_field)}')
+                    self.addItem.emit({
+                        'label': f'{str(profile_field)}',
+                        'obj': profile_field,
+                        'index': index
+                    })
+                    index +=1
             #tag = profileField.tag
         #self.updateProgress.emit(999)
     
@@ -108,9 +119,10 @@ class MainWindow(QMainWindow):
         self.ui.bar_loading.setValue(val)
     """
 
-    def addItem(self, newLabel: str):
+    def addItem(self, newItem: dict):
         if self.list_target:
-            self.list_target.addItem(newLabel)
+            print(newItem)
+            self.list_target.addItem(newItem['label'])
 
 
     # Uses open file dialog to setup a filename
