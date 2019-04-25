@@ -11,6 +11,7 @@ import qdarkstyle
 
 # mine
 from ui.main_window import Ui_MainWindow
+import models
 
 class ProfileScanner(QtCore.QThread):
     # Progress Signal
@@ -36,22 +37,36 @@ class ProfileScanner(QtCore.QThread):
         for profileField in root:
             ns = ns_re.match(profileField.tag).group()
             fieldType = profileField.tag.replace(ns,'')
+
+            """
             if profileField.tag != tag:
                 print('tag: ', profileField.tag)
                 print('namespace: ', ns)
                 print('fieldType: ', profileField.tag.replace(ns,''))
                 print('attribute: ', profileField.attrib)
+            """
+
+            # Get class
+            model_class = models.classes_by_modelName.get(fieldType)
+            if model_class:
+                fields = {}
+                for child in profileField:
+                    tag = child.tag.replace(ns,'')
+                    fields[tag] = child.text
+
+                profile_field = model_class()
+                profile_field.set_fields(fields)
 
 
-            self.addItem.emit(fieldType)
-            tag = profileField.tag
+                self.addItem.emit(str(profile_field))
+            #tag = profileField.tag
         #self.updateProgress.emit(999)
     
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
         self.ui = Ui_MainWindow()
         ui = self.ui
         ui.setupUi(self)

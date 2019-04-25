@@ -6,8 +6,27 @@ from enum import Enum
 apiVersion = 44
 
 # Metadata Classes
-class ProfileActionOverride:
+class ProfileField:
+    def __init__(self):
+        self.model_name = ''
+        self.toggles = {}
+        self.model_fields = {}
+
+    def get_toggles(self) -> dict:
+        return self.toggles
+    
+    def set_toggles(self, toggles: dict):
+        self.toggles = toggles
+
+    def set_fields(self, fields: dict):
+        self.model_fields = fields
+
+    def get_fields(self) -> dict:
+        return self.model_fields
+
+class ProfileActionOverride(ProfileField):
     def __init__(self, actionName: str, content: str, formFactor: str, pageOrSobjectType: str, recordType: str, type:str):
+        super().__init__()
         self.actionName = actionName
         self.content = content
         self.formFactor = formFactor
@@ -15,40 +34,133 @@ class ProfileActionOverride:
         self.recordType = recordType
         self.type = type
 
-class ProfileApplicationVisibility:
+        self.model_name = 'profileActionOverrides'
+        self.model_fields = {
+            'actionName': self.actionName
+        }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.actionName}: {self.content}'
+    
+
+class ProfileApplicationVisibility(ProfileField):
     def __init__(self, application: str, default: bool, visible: bool ):
+        super().__init__()
         self.application = application
         self.default = bool
         self.visible = bool
 
-class ProfileCategoryGroupVisibility:
+        self.model_name = 'applicationVisibilities'
+        self.toggles = {
+            'default': default,
+            'visible': visible
+        }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.application}'
+    
+
+class ProfileCategoryGroupVisibility(ProfileField):
     def __init__(self, dataCategories: List[str], dataCategoryGroup: str, visibility: str ):
+        super().__init__()
         self.dataCategories = dataCategories
         self.dataCategoryGroup = dataCategoryGroup
         self.visibility = visibility
 
-class ProfileApexClassAccess:
-    def __init__(self, apexClass: str, enabled: bool):
+        self.model_name = 'categoryGroupVisibilities'
+        self.toggles = {
+            'visibility': self.visibility
+        }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.dataCategoryGroup}'
+
+
+class ProfileApexClassAccess(ProfileField):
+    def __init__(self, apexClass='', enabled=False):
+        super().__init__()
         self.apexClass = apexClass
         self.enabled = enabled
 
-class ProfileCustomPermissions:
+        self.model_name = 'classAccesses'
+        self.toggles = {
+            'enabled': self.enabled
+        }
+
+    def get_fields(self):
+        return {
+            'apexClass': apexClass,
+            'enabled': enabled
+        }
+
+    def set_fields(self, fields: dict):
+        for field, value in fields.items():
+            if field == 'apexClass':
+                self.apexClass = value
+            elif field == 'enabled':
+                if value == 'true':
+                    self.enabled = True
+                else:
+                    self.enabled = False
+
+    def __str__(self):
+        return f'{self.model_name}: {self.apexClass}'
+
+class ProfileCustomPermissions(ProfileField):
     def __init__(self, enabled: bool, name: str):
+        super().__init__()
         self.enabled = enabled
         self.name = name
 
-class ProfileExternalDataSourceAccess:
+        self.model_name = 'customPermissions'
+        self.toggles = {
+            'enabled': self.enabled
+        }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.name}'
+
+
+class ProfileExternalDataSourceAccess(ProfileField):
     def __init__(self, enabled: bool, externalDataSource: str ):
+        super().__init__()
         self.enabled = enabled
         self.externalDataSource = externalDataSource
-        
-class ProfileFieldLevelSecurity:
+
+        self.model_name = 'externalDataSourceAccesses'
+        self.toggles = {
+            'enabled': self.enabled
+        }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.externalDataSource}'
+
+
+class ProfileFieldLevelSecurity(ProfileField):
     def __init__(self, editable: bool, field: str , readable: bool, hidden: bool):
         self.editable = editable
         self.field = field
-        if apiVersion <= 22.0:
-            self.hidden = hidden
+        #if apiVersion <= 22.0:
+        #    self.hidden = hidden
+        self.hidden = hidden
         self.readable = readable
+
+        if apiVersion <= 22:
+            self.model_name = 'fieldLevelSecurities'
+            self.toggles = {
+                'editable': editable,
+                'hidden': hidden,
+                'readable': readable
+            }
+        else:
+            self.model_name = 'fieldPermissions'
+            self.toggles = {
+                'editable': editable,
+                'readable': readable
+            }
+
+    def __str__(self):
+        return f'{self.model_name}: {self.field}'
 
 class ProfileLayoutAssignments:
     def __init__(self, layout: str, recordType: str):
@@ -108,6 +220,16 @@ class ProfileUserPermission:
         self.enabled = enabled
         self.name = name
 
+classes_by_modelName = {
+    #ProfileActionOverride(None, None, None, None, None, None).model_name, ProfileActionOverride,
+    ProfileApexClassAccess(None, None).model_name: ProfileApexClassAccess,
+    #ProfileApexPageAccess().model_name, ProfileApexPageAccess,
+    #ProfileApplicationVisibility().model_name, ProfileApplicationVisibility,
+    #ProfileCategoryGroupVisibility().model_name, ProfileCategoryGroupVisibility,
+    #ProfileCustomPermissions().model_name, ProfileCustomPermissions,
+    #ProfileExternalDataSourceAccess().model_name, ProfileExternalDataSourceAccess,
+    #ProfileFieldLevelSecurity().model_name, ProfileFieldLevelSecurity,
+}
 
 class Profile:
     def __init__(self, applicationVisibilities: List[ProfileApplicationVisibility],
@@ -124,16 +246,20 @@ class Profile:
         if apiVersion >= 41:
             self.categoryGroupVisibilities = categoryGroupVisibilities
         self.classAccesses = classAccesses
-        if apiVersion >= 31:
+        if apiVersion >= 30:
             self.custom = custom
+        if apiVersion >= 31:
+            self.customPermissions = customPermissions
         if apiVersion >= 30:
             self.description = description
         if apiVersion >= 27:
             self.externalDataSourceAccesses = externalDataSourceAccesses
+
         if apiVersion <= 22:
             self.fieldLevelSecurities = fieldPermissions
         else:
             self.fieldPermissions = fieldPermissions
+
         self.fullName = fullName
         self.layoutAssignments = layoutAssignments
         if apiVersion >= 25:
