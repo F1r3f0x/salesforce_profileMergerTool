@@ -13,6 +13,11 @@ import qdarkstyle
 from ui.main_window import Ui_MainWindow
 import models
 
+profiles_source = {}
+profiles_target = {}
+profiles_merged = {}
+
+
 class ProfileScanner(QtCore.QThread):
     # Progress Signal
     updateProgress = QtCore.Signal(int)
@@ -76,7 +81,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         ui = self.ui
         ui.setupUi(self)
-        ui.bar_loading.hide()
+        #ui.bar_loading.hide()
 
         ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, ui.list_source))
         ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, ui.list_target))
@@ -120,6 +125,7 @@ class MainWindow(QMainWindow):
         if file_path != '' and le_target:
             le_target.setText(file_path)
 
+            list_target.clear()
             self.list_target = list_target
             self.scanner_worker.profile_filepath = file_path
             self.scanner_worker.start()

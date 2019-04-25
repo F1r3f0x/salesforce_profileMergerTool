@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SF Profile Merger by @f1r3f0x</string>
+   <string>SF Profile Merger by @f1r3f0x -- WIP</string>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -38,7 +38,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Base Api Version:</string>
+         <string>(TODO) Base Api Version:</string>
         </property>
        </widget>
       </item>
@@ -254,27 +254,69 @@
      </spacer>
     </item>
     <item>
-     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0,0,0,0">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="lbl_allProfiles">
+     <layout class="QHBoxLayout" name="layout_filter">
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Permission Type:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="cmb_filter">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="text">
-         <string>Profile A:</string>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
         </property>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>apexClasses</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>pageAccesses</string>
+         </property>
+        </item>
        </widget>
       </item>
-      <item row="1" column="1" rowspan="3">
+      <item>
+       <spacer name="spc_filter">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0,0">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item row="1" column="1" rowspan="2">
        <widget class="QListWidget" name="list_target">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -290,7 +332,46 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2" rowspan="3">
+      <item row="0" column="1">
+       <widget class="QLabel" name="lbl_included">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Profile B:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Profile Merged:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" rowspan="2">
+       <widget class="QListWidget" name="list_merged">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" rowspan="2">
        <widget class="Line" name="line">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
@@ -309,7 +390,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" rowspan="3">
+      <item row="1" column="0" rowspan="2">
        <widget class="QListWidget" name="list_source">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -325,8 +406,8 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="label_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_allProfiles">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -334,81 +415,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Profile Merged:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="5" rowspan="3">
-       <widget class="QScrollBar" name="verticalScrollBar">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="5">
-       <widget class="QProgressBar" name="bar_loading">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>200</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="value">
-         <number>100</number>
-        </property>
-        <property name="textVisible">
-         <bool>false</bool>
-        </property>
-        <property name="invertedAppearance">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="lbl_included">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Profile B:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3" rowspan="3">
-       <widget class="QListWidget" name="list_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="4">
-       <widget class="QToolButton" name="toolButton_3">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>X</string>
+         <string>Profile A:</string>
         </property>
        </widget>
       </item>
@@ -442,6 +449,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>80</width>
+          <height>36</height>
+         </size>
         </property>
         <property name="text">
          <string>Merge!</string>
