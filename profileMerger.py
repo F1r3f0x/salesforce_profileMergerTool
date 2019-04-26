@@ -3,19 +3,53 @@ import sys
 import re
 import math
 from xml.etree import ElementTree
+from pprint import pprint
 
 # qt
 from PySide2 import QtCore
-from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog, QListWidget
+from PySide2 import QtGui
+from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog, QListWidget, QListWidgetItem
 import qdarkstyle
 
 # mine
 from ui.main_window import Ui_MainWindow
 import models
 
-profiles_source = {}
-profiles_target = {}
-profiles_merged = {}
+
+brush_b_enabled = QtGui.QBrush(QtGui.QColor(0, 85, 0))
+brush_b_enabled.setStyle(QtCore.Qt.SolidPattern)
+
+brush_b_disabled = QtGui.QBrush(QtGui.QColor(170, 0, 0))
+brush_b_disabled.setStyle(QtCore.Qt.SolidPattern)
+
+brush_b_removed = QtGui.QBrush(QtGui.QColor(71, 71, 71))
+brush_b_removed.setStyle(QtCore.Qt.BDiagPattern)
+brush_f_removed = QtGui.QBrush(QtGui.QColor(170, 170, 170))
+brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
+
+
+profiles_source = []
+profiles_target = []
+profiles_merged = []
+
+class ProfileItem(QListWidgetItem):
+    def __init__(self,id:str, item_data:dict, item_enabled=False, *args, **kwargs):
+        super().__init__()
+        self.id = id
+        self.setText(id)
+        self.item_data = item_data
+        self.item_enabled = item_enabled
+
+    @property
+    def item_enabled(self):
+        return self.__item_enabled
+    @item_enabled.setter
+    def item_enabled(self, value: bool):
+        self.__item_enabled = value
+        if value:
+            self.setBackground(brush_b_enabled)
+        else:
+            self.setBackground(brush_b_disabled)
 
 
 class ProfileScanner(QtCore.QThread):
@@ -62,21 +96,24 @@ class ProfileScanner(QtCore.QThread):
 
                 profile_field = model_class()
 
-                #print(fields)
                 profile_field.set_fields(fields)
 
                 toggles = profile_field.get_toggles()
                 if toggles:
                     for key, value in toggles.items():
+                        label = f'{str(profile_field)} --- {key}:{value}'
+                        item = ProfileItem(label, {'data':'hola'}, value)
                         self.addItem.emit({
-                            'label': f'{str(profile_field)} --- {key}:{value}',
+                            'label': label,
                             'obj': profile_field,
+                            'item': item,
                             'index': index
                         })
                         index += 1
                 else:
+                    label = f'{str(profile_field)}'
                     self.addItem.emit({
-                        'label': f'{str(profile_field)}',
+                        'label': label,
                         'obj': profile_field,
                         'index': index
                     })
@@ -93,9 +130,19 @@ class MainWindow(QMainWindow):
         ui = self.ui
         ui.setupUi(self)
         #ui.bar_loading.hide()
+        
+        self.ui.list_source.item(0).setBackground(brush_b_enabled)
+        self.ui.list_source.item(1).setBackground(brush_b_disabled)
+        self.ui.list_source.item(3).setBackground(brush_b_removed)
+        self.ui.list_source.item(3).setForeground(brush_f_removed)
+        
 
         ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, ui.list_source))
         ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, ui.list_target))
+
+        ui.btn_start.clicked.connect(lambda: pprint(profiles_source[0]))
+
+        ui.list_source.itemClicked.connect(self.itemClicked)
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItem.connect(self.addItem)
@@ -119,10 +166,22 @@ class MainWindow(QMainWindow):
         self.ui.bar_loading.setValue(val)
     """
 
+    def itemClicked(self, value:QListWidgetItem):
+        pprint(value.__dict__)
+
     def addItem(self, newItem: dict):
         if self.list_target:
-            print(newItem)
-            self.list_target.addItem(newItem['label'])
+            if not newItem.get('item'):
+                self.list_target.addItem(newItem['label'])
+            else:
+                self.list_target.addItem(newItem['item'])
+
+            if self.list_target == self.ui.list_source:
+                profiles_source.append(newItem)
+            elif self.list_target == self.ui.list_target:
+                profiles_target.append(newItem)
+            if self.list_target == self.ui.list_merged:
+                profiles_merged.append(newItem)
 
 
     # Uses open file dialog to setup a filename
