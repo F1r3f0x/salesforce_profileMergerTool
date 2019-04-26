@@ -236,26 +236,26 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
         else:
             self.model_name = 'fieldPermissions'
 
-        @property
-        def editable(self):
-            return self.__editable
-        @editable.setter
-        def editable(self, value):
-            self.__editable = bool_to_str(value)
-        
-        @property
-        def hidden(self):
-            return self.__hidden
-        @hidden.setter
-        def hidden(self, value):
-            self.__hidden = bool_to_str(value)
-        
-        @property
-        def readable(self):
-            return self.__readable
-        @readable.setter
-        def readable(self, value):
-            self.__readable = bool_to_str(value)
+    @property
+    def editable(self):
+        return self.__editable
+    @editable.setter
+    def editable(self, value):
+        self.__editable = bool_to_str(value)
+    
+    @property
+    def hidden(self):
+        return self.__hidden
+    @hidden.setter
+    def hidden(self, value):
+        self.__hidden = bool_to_str(value)
+    
+    @property
+    def readable(self):
+        return self.__readable
+    @readable.setter
+    def readable(self, value):
+        self.__readable = bool_to_str(value)
         
     def get_toggles(self):
         if self.api_version <= 22:
@@ -271,10 +271,12 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
             }
 
     def get_fields(self):
-        return {
-            'apexClass': self.apexClass,
-            'enabled': self.enabled
-        }
+        return  {
+                'editable': self.editable,
+                'hidden': self.hidden,
+                'field': self.field,
+                'readable': self.readable
+            }
 
 
     def __str__(self):
