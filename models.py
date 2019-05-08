@@ -599,7 +599,8 @@ class Profile:
         recordTypeVisibilities: List[ProfileRecordTypeVisibility], tabVisibilities: List[ProfileTabVisibility],
         userLicense: str, userPermissions: List[ProfileUserPermission]):
 
-        self.applicationVisibilities = applicationVisibilities
+        if apiVersion < 45:
+            self.applicationVisibilities = applicationVisibilities
         if apiVersion >= 41:
             self.categoryGroupVisibilities = categoryGroupVisibilities
         self.classAccesses = classAccesses
