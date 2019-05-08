@@ -101,7 +101,7 @@ class ProfileScanner(QtCore.QThread):
                 toggles = profile_field.get_toggles()
                 if toggles:
                     for key, value in toggles.items():
-                        label = f'{str(profile_field)} --- {key}:{value}'
+                        label = f'{str(profile_field)} --- {key}'
                         item = ProfileItem(label, {'data':'hola'}, value)
                         self.addItem.emit({
                             'label': label,
@@ -129,12 +129,22 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         ui = self.ui
         ui.setupUi(self)
+
+        # fill filter cmb
+        self.ui.cmb_filter.clear()
+        self.ui.cmb_filter.addItem('All')
+        for model_name in models.classes_by_modelName.keys():
+            self.ui.cmb_filter.addItem(model_name)
+
         #ui.bar_loading.hide()
         
         self.ui.list_source.item(0).setBackground(brush_b_enabled)
         self.ui.list_source.item(1).setBackground(brush_b_disabled)
         self.ui.list_source.item(3).setBackground(brush_b_removed)
         self.ui.list_source.item(3).setForeground(brush_f_removed)
+
+        self.ui.list_source.clear()
+
         
 
         ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, ui.list_source))
@@ -207,7 +217,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication([])
     
-    # Setup Dark Theme
+    # Setup Style
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
 
     window = MainWindow()
