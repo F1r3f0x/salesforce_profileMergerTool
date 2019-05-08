@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>671</width>
-    <height>496</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
        <number>10</number>
       </property>
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="lbl_api">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -134,7 +134,7 @@
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer">
+       <spacer name="spc_api">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -156,14 +156,14 @@
       <item>
        <widget class="QLabel" name="lbl_source">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>90</width>
+          <width>108</width>
           <height>0</height>
          </size>
         </property>
@@ -192,21 +192,21 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="selector_target">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
+     <layout class="QHBoxLayout" name="layout_selector">
+      <property name="spacing">
+       <number>7</number>
       </property>
       <item>
        <widget class="QLabel" name="lbl_target">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>90</width>
+          <width>108</width>
           <height>0</height>
          </size>
         </property>
@@ -220,6 +220,12 @@
         <property name="enabled">
          <bool>true</bool>
         </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="echoMode">
          <enum>QLineEdit::Normal</enum>
         </property>
@@ -230,6 +236,12 @@
       </item>
       <item>
        <widget class="QToolButton" name="btn_target">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -238,25 +250,9 @@
      </layout>
     </item>
     <item>
-     <spacer name="spc_1">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>0</width>
-        <height>10</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
      <layout class="QHBoxLayout" name="layout_filter">
       <item>
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="lbl_filter">
         <property name="text">
          <string>Permission Type:</string>
         </property>
@@ -272,7 +268,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>0</width>
           <height>0</height>
          </size>
         </property>
@@ -293,31 +289,50 @@
         </item>
        </widget>
       </item>
+      <item>
+       <spacer name="spc_filter">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
      </layout>
     </item>
     <item>
-     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0,0,0">
+     <spacer name="spc_1">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>0</width>
+        <height>10</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="0" column="1">
-       <widget class="QLabel" name="lbl_included">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Profile B:</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="3">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="lbl_merged">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -329,36 +344,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1" rowspan="2">
-       <widget class="QListWidget" name="list_target">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="dragEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3" rowspan="2">
-       <widget class="QListWidget" name="list_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" rowspan="2">
+      <item row="1" column="0" rowspan="2">
        <widget class="QListWidget" name="list_source">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -411,7 +397,7 @@
         </item>
         <item>
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
          <property name="flags">
           <set>NoItemFlags</set>
@@ -442,7 +428,23 @@
         </item>
        </widget>
       </item>
-      <item row="2" column="2" rowspan="2">
+      <item row="1" column="1" rowspan="2">
+       <widget class="QListWidget" name="list_target">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+        <property name="dragEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" rowspan="2">
        <widget class="Line" name="line">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
@@ -462,7 +464,7 @@
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QLabel" name="lbl_allProfiles">
+       <widget class="QLabel" name="lbl_source_2">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -474,18 +476,31 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
-       <spacer name="spc_filter">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="0" column="1">
+       <widget class="QLabel" name="lbl_target_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
+        <property name="text">
+         <string>Profile B:</string>
         </property>
-       </spacer>
+       </widget>
+      </item>
+      <item row="1" column="3" rowspan="2">
+       <widget class="QListWidget" name="list_merged">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -498,7 +513,7 @@
        <number>0</number>
       </property>
       <item>
-       <spacer name="spc_4">
+       <spacer name="spc_merge">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -535,14 +550,15 @@
    <zorder></zorder>
    <zorder>spc_1</zorder>
    <zorder></zorder>
+   <zorder></zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>671</width>
-     <height>20</height>
+     <width>1024</width>
+     <height>24</height>
     </rect>
    </property>
   </widget>
