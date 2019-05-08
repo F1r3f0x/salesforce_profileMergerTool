@@ -15,7 +15,7 @@ import qdarkstyle
 from ui.main_window import Ui_MainWindow
 import models
 
-
+# Brushes
 brush_b_enabled = QtGui.QBrush(QtGui.QColor(0, 85, 0))
 brush_b_enabled.setStyle(QtCore.Qt.SolidPattern)
 
@@ -26,19 +26,38 @@ brush_b_removed = QtGui.QBrush(QtGui.QColor(71, 71, 71))
 brush_b_removed.setStyle(QtCore.Qt.BDiagPattern)
 brush_f_removed = QtGui.QBrush(QtGui.QColor(170, 170, 170))
 brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
+#
+
+class GlobalVars:
+    ITEM_ENABLED = True
+    ITEM_DISABLED = False
+    ITEM_NOTOGGLE = 'no'
+
+    SOURCE_NAMESPACE = ''
+    TARGET_NAMESPACE = ''
+
+    FROM_SOURCE = 'source'
+    FROM_TARGET = 'targe'
+    FROM_MERGE = 'merge'
 
 
-profiles_source = []
-profiles_target = []
-profiles_merged = []
+# Profiles
+#profile_merged = models.Profile()
+
+profile_list_source = []
+profile_list_target = []
+profile_list_merged = []
+
 
 class ProfileItem(QListWidgetItem):
-    def __init__(self,id:str, item_data:dict, item_enabled=False, *args, **kwargs):
+    def __init__(self,id:str, _property:str, item_data:dict, from_profile:str, item_enabled, *args, **kwargs):
         super().__init__()
         self.id = id
-        self.setText(id)
+        self.property = _property
+        self.setText(_property)
         self.item_data = item_data
         self.item_enabled = item_enabled
+        self.from_profile = from_profile
 
     @property
     def item_enabled(self):
@@ -46,10 +65,19 @@ class ProfileItem(QListWidgetItem):
     @item_enabled.setter
     def item_enabled(self, value: bool):
         self.__item_enabled = value
-        if value:
-            self.setBackground(brush_b_enabled)
-        else:
-            self.setBackground(brush_b_disabled)
+        if value != GlobalVars.ITEM_NOTOGGLE:
+            if value:
+                self.setBackground(brush_b_enabled)
+            else:
+                self.setBackground(brush_b_disabled)
+
+    def compareObject(self, other):
+        return self.id == other.id
+
+    def __eq__(self, other):
+        if other == None:
+            return self.id == None
+        return self.id == other.id and self.property == other.property
 
 
 class ProfileScanner(QtCore.QThread):
@@ -60,23 +88,29 @@ class ProfileScanner(QtCore.QThread):
     def __init__(self, *args, **kwargs):
         QtCore.QThread.__init__(self)
         self.profile_filepath = ''
+        self.from_profile = ''
 
     # Overloaded, is run by calling its start() function
     def run(self):
+        # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
         root = tree.getroot()
 
-        ns_pattern = '^{.*}'
-        ns_re = re.compile(ns_pattern)
+        # This regex is for removing the namespace prefix of the tag
+        namespace_pattern = '^{.*}'
+        namespace_regex = re.compile(namespace_pattern)
 
         tag = ''
-        print(len(root))
-
-        val = 0
         index = 0
         for profileField in root:
-            ns = ns_re.match(profileField.tag).group()
-            fieldType = profileField.tag.replace(ns,'')
+            namespace = namespace_regex.match(profileField.tag).group()
+
+            if self.from_profile == GlobalVars.FROM_SOURCE and not GlobalVars.SOURCE_NAMESPACE:
+                GlobalVars.SOURCE_NAMESPACE = namespace
+            if self.from_profile == GlobalVars.FROM_TARGET and not GlobalVars.TARGET_NAMESPACE:
+                GlobalVars.TARGET_NAMESPACE = namespace
+
+            fieldType = profileField.tag.replace(namespace, '')
 
             """
             if profileField.tag != tag:
@@ -91,7 +125,7 @@ class ProfileScanner(QtCore.QThread):
             if model_class:
                 fields = {}
                 for child in profileField:
-                    tag = child.tag.replace(ns,'')
+                    tag = child.tag.replace(namespace, '')
                     fields[tag] = child.text
 
                 profile_field = model_class()
@@ -99,28 +133,33 @@ class ProfileScanner(QtCore.QThread):
                 profile_field.set_fields(fields)
 
                 toggles = profile_field.get_toggles()
+                _id = str(profile_field)
                 if toggles:
                     for key, value in toggles.items():
-                        label = f'{str(profile_field)} --- {key}'
-                        item = ProfileItem(label, {'data':'hola'}, value)
+                        full_property = f'{str(profile_field)} --- {key}'
+                        item = ProfileItem(_id, full_property, {'data': profile_field.get_fields()}, self.from_profile, value)
                         self.addItem.emit({
-                            'label': label,
+                            'id': _id,
+                            'label': full_property,
                             'obj': profile_field,
                             'item': item,
                             'index': index
                         })
                         index += 1
                 else:
-                    label = f'{str(profile_field)}'
+                    item = ProfileItem(_id, _id, {'data': profile_field.get_fields()}, self.from_profile, GlobalVars.ITEM_NOTOGGLE)
                     self.addItem.emit({
-                        'label': label,
+                        'id': _id,
+                        'label': _id,
                         'obj': profile_field,
+                        'item': item,
                         'index': index
                     })
                     index +=1
-            #tag = profileField.tag
+                    
+        print(GlobalVars.SOURCE_NAMESPACE)
+            #tag = profileField.tag 
         #self.updateProgress.emit(999)
-    
 
 
 class MainWindow(QMainWindow):
@@ -147,11 +186,12 @@ class MainWindow(QMainWindow):
 
         
 
-        ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, ui.list_source))
-        ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, ui.list_target))
+        ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, GlobalVars.FROM_SOURCE, ui.list_source))
+        ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, GlobalVars.FROM_TARGET ,ui.list_target))
 
-        ui.btn_start.clicked.connect(lambda: pprint(profiles_source[0]))
+        ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
 
+        self.lastItem = None
         ui.list_source.itemClicked.connect(self.itemClicked)
 
         self.scanner_worker = ProfileScanner()
@@ -177,28 +217,35 @@ class MainWindow(QMainWindow):
     """
 
     def itemClicked(self, value:QListWidgetItem):
-        pprint(value.__dict__)
+
+        if self.lastItem == None:
+            self.lastItem = value
+
+        pprint(self.lastItem.property)
+        pprint(value.property)
+        pprint(self.lastItem == value)
+
+        self.lastItem = value
+
 
     def addItem(self, newItem: dict):
         if self.list_target:
-            if not newItem.get('item'):
-                self.list_target.addItem(newItem['label'])
-            else:
-                self.list_target.addItem(newItem['item'])
+            
+            self.list_target.addItem(newItem['item'])
 
             if self.list_target == self.ui.list_source:
-                profiles_source.append(newItem)
+                profile_list_source.append(newItem)
             elif self.list_target == self.ui.list_target:
-                profiles_target.append(newItem)
+                profile_list_target.append(newItem)
             if self.list_target == self.ui.list_merged:
-                profiles_merged.append(newItem)
+                profile_list_merged.append(newItem)
 
 
     # Uses open file dialog to setup a filename
-    def find_profile_file(self, le_target: QLineEdit, list_target: QListWidget):
+    def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
         file_path, _filtro = QFileDialog.getOpenFileName(
             self,
-            'Pick your Profile A',
+            'Pick your Profile file',
             '',
             '*.xml *.profile'
         )
@@ -209,6 +256,7 @@ class MainWindow(QMainWindow):
             list_target.clear()
             self.list_target = list_target
             self.scanner_worker.profile_filepath = file_path
+            self.scanner_worker.from_profile = from_profile
             self.scanner_worker.start()
 
         return file_path

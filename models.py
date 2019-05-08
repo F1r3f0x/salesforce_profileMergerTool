@@ -18,6 +18,7 @@ class ProfileFieldType:
         self.api_version = api_version
         self.model_name = ''
         self.model_fields = {}
+        self.model_special_field = ''
 
     def get_toggles(self) -> dict:
         return None
@@ -51,11 +52,11 @@ class ProfileActionOverride(ProfileFieldType):
             'formFactor': self.formFactor,
             'pageOrSobjectType': self.pageOrSobjectType,
             'recordType': self.recordType,
-            'type': self.f_type,
+            'type': self.type,
         }
-
+        
     def __str__(self):
-        return f'{self.model_name}: {self.actionName}: {self.content}'
+        return f'{self.model_name}: {self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
     
 
 class ProfileApplicationVisibility(ProfileFieldType):
