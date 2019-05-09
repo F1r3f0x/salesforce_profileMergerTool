@@ -30,24 +30,30 @@ brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
 #
 
 
-class GlobalVars:
+class GlobalVar:
     ITEM_ENABLED = True
     ITEM_DISABLED = False
     ITEM_NOTOGGLE = 'no'
 
-    SOURCE_NAMESPACE = ''
-    TARGET_NAMESPACE = ''
-
-    FROM_SOURCE = 'source'
-    FROM_TARGET = 'targe'
-    FROM_MERGE = 'merge'
-
-    PROPERTIES_SOURCE = {}
-    PROPERTIES_TARGET = {}
-    PROPERTIES_MERGED = {}
-
     SOURCE_MERGED = False
     TARGET_MERGED = False
+        
+    FROM_SOURCE = 'source'
+    FROM_TARGET = 'target'
+    FROM_MERGED = 'merged'
+
+    class Source:
+        NAMESPACE = ''
+        PROPERTIES = {}
+
+    class Target:
+        NAMESPACE = ''
+        PROPERTIES = {}
+
+    class Merged:
+        NAMESPACE = ''
+        PROPERTIES = {}
+
 
 
 class ProfileItem(QListWidgetItem):
@@ -66,7 +72,7 @@ class ProfileItem(QListWidgetItem):
     @item_enabled.setter
     def item_enabled(self, value: bool):
         self.__item_enabled = value
-        if value != GlobalVars.ITEM_NOTOGGLE:
+        if value != GlobalVar.ITEM_NOTOGGLE:
             if value:
                 self.setBackground(brush_b_enabled)
             else:
@@ -105,20 +111,20 @@ class ProfileScanner(QtCore.QThread):
     # Overloaded, is run by calling its start() function
     def run(self):
         # Reset tables
-        if GlobalVars.SOURCE_MERGED and GlobalVars.TARGET_MERGED and len(GlobalVars.PROPERTIES_MERGED) > 0:
-            GlobalVars.SOURCE_MERGED = False
-            GlobalVars.TARGET_MERGED = False
+        if GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and len(GlobalVar.Merged.PROPERTIES) > 0:
+            GlobalVar.SOURCE_MERGED = False
+            GlobalVar.TARGET_MERGED = False
 
-            properties_rescan = GlobalVars.PROPERTIES_TARGET if self.from_profile == GlobalVars.FROM_SOURCE else GlobalVars.PROPERTIES_SOURCE
+            properties_rescan = GlobalVar.Target.PROPERTIES if self.from_profile == GlobalVar.FROM_SOURCE else GlobalVar.Source.PROPERTIES
 
-            GlobalVars.PROPERTIES_MERGED = {}
+            GlobalVar.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
-                GlobalVars.PROPERTIES_MERGED[key] = value
+                GlobalVar.Merged.PROPERTIES[key] = value
 
-            if len(GlobalVars.PROPERTIES_SOURCE) > 0 and self.from_profile == GlobalVars.FROM_SOURCE:
-                GlobalVars.PROPERTIES_SOURCE = {}
-            if len(GlobalVars.PROPERTIES_TARGET) > 0 and self.from_profile == GlobalVars.FROM_TARGET:
-                GlobalVars.PROPERTIES_TARGET = {}
+            if len(GlobalVar.Source.PROPERTIES) > 0 and self.from_profile == GlobalVar.FROM_SOURCE:
+                GlobalVar.Source.PROPERTIES = {}
+            if len(GlobalVar.Target.PROPERTIES) > 0 and self.from_profile == GlobalVar.FROM_TARGET:
+                GlobalVar.Target.PROPERTIES = {}
             
 
         # Loop through profile XML
@@ -135,10 +141,10 @@ class ProfileScanner(QtCore.QThread):
         for profileField in root:
             namespace = namespace_regex.match(profileField.tag).group()
 
-            if self.from_profile == GlobalVars.FROM_SOURCE and not GlobalVars.SOURCE_NAMESPACE:
-                GlobalVars.SOURCE_NAMESPACE = namespace
-            if self.from_profile == GlobalVars.FROM_TARGET and not GlobalVars.TARGET_NAMESPACE:
-                GlobalVars.TARGET_NAMESPACE = namespace
+            if self.from_profile == GlobalVar.FROM_SOURCE and not GlobalVar.Source.NAMESPACE:
+                GlobalVar.Source.NAMESPACE = namespace
+            if self.from_profile == GlobalVar.FROM_TARGET and not GlobalVar.Target.NAMESPACE:
+                GlobalVar.Target.NAMESPACE = namespace
 
             fieldType = profileField.tag.replace(namespace, '')
 
@@ -170,20 +176,20 @@ class ProfileScanner(QtCore.QThread):
                         full_property = f'{str(profile_field)} --- {key}'
                         fields_dict[full_property] = ProfileItem(_id, full_property, {'data': profile_field.get_fields()}, self.from_profile, value)
                 else:
-                    fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.get_fields()}, self.from_profile, GlobalVars.ITEM_NOTOGGLE)
+                    fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.get_fields()}, self.from_profile, GlobalVar.ITEM_NOTOGGLE)
 
         if len(fields_dict) > 0:
             # Fill global lists
             for key, value in fields_dict.items():
-                GlobalVars.PROPERTIES_MERGED[key] = value
-                if self.from_profile == GlobalVars.FROM_SOURCE:
-                    GlobalVars.PROPERTIES_SOURCE[key] = value
-                if self.from_profile == GlobalVars.FROM_TARGET:
-                    GlobalVars.PROPERTIES_TARGET[key] = value
+                GlobalVar.Merged.PROPERTIES[key] = value
+                if self.from_profile == GlobalVar.FROM_SOURCE:
+                    GlobalVar.Source.PROPERTIES[key] = value
+                if self.from_profile == GlobalVar.FROM_TARGET:
+                    GlobalVar.Target.PROPERTIES[key] = value
 
             # Set flags
-            GlobalVars.SOURCE_MERGED = len(GlobalVars.PROPERTIES_SOURCE) > 0
-            GlobalVars.TARGET_MERGED = len(GlobalVars.PROPERTIES_TARGET) > 0
+            GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
+            GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
 
             self.addItems.emit( {
                 'from': self.from_profile, # with love from
@@ -213,8 +219,8 @@ class MainWindow(QMainWindow):
 
         self.ui.list_source.clear()
         
-        self.ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, GlobalVars.FROM_SOURCE, ui.list_source))
-        self.ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, GlobalVars.FROM_TARGET ,ui.list_target))
+        self.ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, GlobalVar.FROM_SOURCE, ui.list_source))
+        self.ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, GlobalVar.FROM_TARGET ,ui.list_target))
 
         self.ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
 
@@ -259,7 +265,7 @@ class MainWindow(QMainWindow):
 
     def addItems(self, package: dict):
         if self.list_target:
-            merged_dict = GlobalVars.PROPERTIES_MERGED
+            merged_dict = GlobalVar.Merged.PROPERTIES
 
             new_items = package['items']
             list_from = package['from']
@@ -273,8 +279,8 @@ class MainWindow(QMainWindow):
             self.ui.list_source.clear()
             self.ui.list_target.clear()
             for key in sorted(merged_dict.keys()):
-                item_target = GlobalVars.PROPERTIES_TARGET.get(key)
-                item_source = GlobalVars.PROPERTIES_SOURCE.get(key)
+                item_target = GlobalVar.Target.PROPERTIES.get(key)
+                item_source = GlobalVar.Source.PROPERTIES.get(key)
 
                 if item_target:
                     self.ui.list_target.addItem(item_target.getCopy())
@@ -287,7 +293,7 @@ class MainWindow(QMainWindow):
                     self.ui.list_source.addItem('')
 
 
-    # Uses open file dialog to setup a filename
+    # Uses open file dialog to setup a filepath
     def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
         file_path, _filtro = QFileDialog.getOpenFileName(
             self,
