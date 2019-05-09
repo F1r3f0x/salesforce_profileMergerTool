@@ -10,6 +10,11 @@
         <default>true</default>
         <visible>true</visible>
     </applicationVisibilities>
+    <applicationVisibilities>
+        <application>CustomApp4</application>
+        <default>true</default>
+        <visible>true</visible>
+    </applicationVisibilities>
     <classAccesses>
         <apexClass>AwesomeCustomClass1</apexClass>
         <enabled>true</enabled>
