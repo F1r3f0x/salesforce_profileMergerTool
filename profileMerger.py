@@ -9,7 +9,8 @@ from copy import copy, deepcopy
 # qt
 from PySide2 import QtCore
 from PySide2 import QtGui
-from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog, QListWidget, QListWidgetItem
+from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
+from PySide2.QtWidgets import QScrollBar, QListWidget, QListWidgetItem
 import qdarkstyle
 
 # mine
@@ -55,7 +56,6 @@ class GlobalVar:
         PROPERTIES = {}
 
 
-
 class ProfileItem(QListWidgetItem):
     def __init__(self,id:str, _property:str, item_data:dict, from_profile:str, item_enabled, *args, **kwargs):
         super().__init__()
@@ -97,6 +97,7 @@ class ProfileItem(QListWidgetItem):
 
     def __str__(self):
         return f'<ProfileItem: {self.property}>'
+
 
 class ProfileScanner(QtCore.QThread):
     # Progress Signal
@@ -227,7 +228,15 @@ class MainWindow(QMainWindow):
         self.lastItem = None
         self.ui.list_source.itemClicked.connect(self.itemClicked)
         self.ui.list_target.itemClicked.connect(self.itemClicked)
+        self.ui.list_merged.itemClicked.connect(self.itemClicked)
 
+        self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
+        self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
+        self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
+
+        self.ui.list_source.currentRowChanged.connect(self.syncRow)
+        self.ui.list_target.currentRowChanged.connect(self.syncRow)
+        self.ui.list_merged.currentRowChanged.connect(self.syncRow)
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
@@ -291,6 +300,16 @@ class MainWindow(QMainWindow):
                     self.ui.list_source.addItem(item_source.getCopy())
                 else:
                     self.ui.list_source.addItem('')
+
+    def syncScroll(self, value):
+        self.ui.list_source.verticalScrollBar().setValue(value)
+        self.ui.list_target.verticalScrollBar().setValue(value)
+        self.ui.list_merged.verticalScrollBar().setValue(value)
+    
+    def syncRow(self, value):
+        self.ui.list_source.setCurrentRow(value)
+        self.ui.list_target.setCurrentRow(value)
+        self.ui.list_merged.setCurrentRow(value)
 
 
     # Uses open file dialog to setup a filepath
