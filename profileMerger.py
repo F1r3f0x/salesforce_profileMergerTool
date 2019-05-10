@@ -10,7 +10,7 @@ from copy import copy, deepcopy
 from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
-from PySide2.QtWidgets import QScrollBar, QListWidget, QListWidgetItem
+from PySide2.QtWidgets import QScrollBar, QListWidget, QListWidgetItem, QMessageBox
 import qdarkstyle
 
 # mine
@@ -212,11 +212,6 @@ class MainWindow(QMainWindow):
             self.ui.cmb_filter.addItem(model_name)
 
         #ui.bar_loading.hide()
-        
-        self.ui.list_source.item(0).setBackground(brush_b_enabled)
-        self.ui.list_source.item(1).setBackground(brush_b_disabled)
-        self.ui.list_source.item(3).setBackground(brush_b_removed)
-        self.ui.list_source.item(3).setForeground(brush_f_removed)
 
         self.ui.list_source.clear()
         
@@ -226,17 +221,16 @@ class MainWindow(QMainWindow):
         self.ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
 
         self.lastItem = None
-        self.ui.list_source.itemClicked.connect(self.itemClicked)
-        self.ui.list_target.itemClicked.connect(self.itemClicked)
-        self.ui.list_merged.itemClicked.connect(self.itemClicked)
+        self.ui.list_source.itemDoubleClicked.connect(self.sourceClicked)
+        self.ui.list_target.itemDoubleClicked.connect(self.targetClicked)
 
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
 
-        self.ui.list_source.currentRowChanged.connect(self.syncRow)
-        self.ui.list_target.currentRowChanged.connect(self.syncRow)
-        self.ui.list_merged.currentRowChanged.connect(self.syncRow)
+        #self.ui.list_source.currentRowChanged.connect(self.syncRow)
+        #self.ui.list_target.currentRowChanged.connect(self.syncRow)
+        #self.ui.list_merged.currentRowChanged.connect(self.syncRow)
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
@@ -260,16 +254,29 @@ class MainWindow(QMainWindow):
         self.ui.bar_loading.setValue(val)
     """
 
-    def itemClicked(self, value:QListWidgetItem):
+    def sourceClicked(self, value:QListWidgetItem):
+        try:
+            msgBox = QMessageBox()
+            msgBox.setText(value.property)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.setDefaultButton(QMessageBox.Ok)
+            ret = msgBox.exec_()
+        except:
+            pass
 
-        if self.lastItem == None:
+    def targetClicked(self, value:QListWidgetItem):
+        """
+            if self.lastItem == None:
+                self.lastItem = value
+
+            pprint(self.lastItem.property)
+            pprint(value.property)
+            pprint(self.lastItem == value)
+
             self.lastItem = value
+        """
+        print('target', value)
 
-        pprint(self.lastItem.property)
-        pprint(value.property)
-        pprint(self.lastItem == value)
-
-        self.lastItem = value
 
 
     def addItems(self, package: dict):
@@ -329,6 +336,13 @@ class MainWindow(QMainWindow):
             self.scanner_worker.profile_filepath = file_path
             self.scanner_worker.from_profile = from_profile
             self.scanner_worker.start()
+
+            file_name = file_path.split('/')[-1].replace('.profile', '')
+            if from_profile == GlobalVar.FROM_SOURCE:
+                self.ui.lbl_source_2.setText(file_name)
+            if from_profile == GlobalVar.FROM_TARGET:
+                self.ui.lbl_target_2.setText(file_name)
+
 
         return file_path
 
