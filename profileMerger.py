@@ -4,7 +4,6 @@ import re
 import math
 from xml.etree import ElementTree
 from pprint import pprint
-from copy import copy, deepcopy
 
 # qt
 from PySide2 import QtCore
@@ -78,10 +77,11 @@ class ProfileItem(QListWidgetItem):
             else:
                 self.setBackground(brush_b_disabled)
 
-    def compareObject(self, other):
+    def compare_field_type(self, other):
         return self.id == other.id
 
-    def getCopy(self):
+    @property
+    def copy(self):
         return ProfileItem (
             self.id,
             self.property,
@@ -113,8 +113,7 @@ class ProfileScanner(QtCore.QThread):
     def run(self):
         # Reset tables
         if GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and len(GlobalVar.Merged.PROPERTIES) > 0:
-            GlobalVar.SOURCE_MERGED = False
-            GlobalVar.TARGET_MERGED = False
+            GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = False, False
 
             properties_rescan = GlobalVar.Target.PROPERTIES if self.from_profile == GlobalVar.FROM_SOURCE else GlobalVar.Source.PROPERTIES
 
@@ -136,9 +135,7 @@ class ProfileScanner(QtCore.QThread):
         namespace_pattern = '^{.*}'
         namespace_regex = re.compile(namespace_pattern)
 
-        tag = ''
-        index = 0
-        fields_dict = {}
+        tag, index, fields_dict = '', 0, {}
         for profileField in root:
             namespace = namespace_regex.match(profileField.tag).group()
 
@@ -164,20 +161,16 @@ class ProfileScanner(QtCore.QThread):
                 for child in profileField:
                     tag = child.tag.replace(namespace, '')
                     fields[tag] = child.text
-
                 profile_field = model_class()
+                profile_field.fields = fields
 
-                profile_field.set_fields(fields)
-
-                toggles = profile_field.get_toggles()
-                _id = str(profile_field)
-                item = None
+                toggles, _id, item = profile_field.toggles, str(profile_field), None
                 if toggles:
                     for key, value in toggles.items():
                         full_property = f'{str(profile_field)} --- {key}'
-                        fields_dict[full_property] = ProfileItem(_id, full_property, {'data': profile_field.get_fields()}, self.from_profile, value)
+                        fields_dict[full_property] = ProfileItem(_id, full_property, {'data': profile_field.fields}, self.from_profile, value)
                 else:
-                    fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.get_fields()}, self.from_profile, GlobalVar.ITEM_NOTOGGLE)
+                    fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.fields}, self.from_profile, GlobalVar.ITEM_NOTOGGLE)
 
         if len(fields_dict) > 0:
             # Fill global lists
@@ -289,7 +282,7 @@ class MainWindow(QMainWindow):
             # Fill merged list
             self.ui.list_merged.clear()
             for value in sorted(merged_dict.values()):
-                self.ui.list_merged.addItem(value.getCopy())
+                self.ui.list_merged.addItem(value.copy)
 
             # Compare to merged and fill
             self.ui.list_source.clear()
@@ -299,12 +292,12 @@ class MainWindow(QMainWindow):
                 item_source = GlobalVar.Source.PROPERTIES.get(key)
 
                 if item_target:
-                    self.ui.list_target.addItem(item_target.getCopy())
+                    self.ui.list_target.addItem(item_target.copy)
                 else:
                     self.ui.list_target.addItem('')
 
                 if item_source:
-                    self.ui.list_source.addItem(item_source.getCopy())
+                    self.ui.list_source.addItem(item_source.copy)
                 else:
                     self.ui.list_source.addItem('')
 
