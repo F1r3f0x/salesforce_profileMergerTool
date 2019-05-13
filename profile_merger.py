@@ -167,9 +167,15 @@ class ProfileScanner(QtCore.QThread):
                 if toggles:
                     for key, value in toggles.items():
                         full_property = f'{str(profile_field)} --- {key}'
-                        fields_dict[full_property] = ProfileItem(_id, full_property, {'data': profile_field.fields}, self.from_profile, value)
+                        fields_dict[full_property] = ProfileItem(
+                            _id, full_property, {'data': profile_field.fields},
+                            self.from_profile, value
+                        )
                 else:
-                    fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.fields}, self.from_profile, GlobalVar.ITEM_NOTOGGLE)
+                    fields_dict[_id] = ProfileItem(
+                        _id, _id, {'data': profile_field.fields}, self.from_profile,
+                        GlobalVar.ITEM_NOTOGGLE
+                    )
 
         # Fill global lists
         if len(fields_dict) > 0:
