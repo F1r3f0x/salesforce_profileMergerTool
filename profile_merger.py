@@ -2,6 +2,7 @@
 import sys
 import re
 from xml.etree import ElementTree
+from xml.dom import minidom
 from pprint import pprint
 from copy import deepcopy
 
@@ -48,15 +49,15 @@ class GlobalVar:
     FROM_MERGED = 'merged'
 
     class Source:
-        NAMESPACE = ''
+        NAMESPACE = None
         PROPERTIES = {}
 
     class Target:
-        NAMESPACE = ''
+        NAMESPACE = None
         PROPERTIES = {}
 
     class Merged:
-        NAMESPACE = ''
+        NAMESPACE = None
         PROPERTIES = {}
 
     class Items:
@@ -181,10 +182,13 @@ class ProfileScanner(QtCore.QThread):
         for prof_field_element in tree_root:
             namespace = namespace_regex.match(prof_field_element.tag).group()
 
+            namespace_value = namespace.replace('{', '')
+            namespace_value = namespace_value.replace('}', '')
+
             if self.from_profile == GlobalVar.FROM_SOURCE and not GlobalVar.Source.NAMESPACE:
-                GlobalVar.Source.NAMESPACE = namespace
+                GlobalVar.Source.NAMESPACE = namespace_value
             if self.from_profile == GlobalVar.FROM_TARGET and not GlobalVar.Target.NAMESPACE:
-                GlobalVar.Target.NAMESPACE = namespace
+                GlobalVar.Target.NAMESPACE = namespace_value
 
             field_type_name = prof_field_element.tag.replace(namespace, '')
 
@@ -266,9 +270,7 @@ class MainWindow(QMainWindow):
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
 
-        # self.ui.list_source.currentRowChanged.connect(self.syncRow)
-        # self.ui.list_target.currentRowChanged.connect(self.syncRow)
-        # self.ui.list_merged.currentRowChanged.connect(self.syncRow)
+        self.ui.btn_start.clicked.connect(self.startBtnClicked)
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
@@ -290,26 +292,27 @@ class MainWindow(QMainWindow):
                     merged_item.toggle_value = target_item.toggle_value
 
             else:
-                self.ui.list_merged.item(row).item_disabled = not self.ui.list_merged.item(row).item_disabled
+                item = self.ui.list_merged.item(row)
+                item.item_disabled = not item.item_disabled
 
-    """
-    def updateProgressBar(self, val: int):
-        progress_bar = self.ui.bar_loading
+    def startBtnClicked(self):
+        xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
+        xml_tree = ElementTree.ElementTree(element=xml_root)
+        
+        for profile_field in GlobalVar.Items.merged:
+            ElementTree.SubElement(xml_root, 'b').text = 'hello'
+            ElementTree.SubElement(xml_root, 'c', attrib={'foo': 'bar'})
+            ElementTree.SubElement(xml_root, 'd').text = 'frick'
+            
+        xml_str = ElementTree.tostring(xml_root, 'utf-8')
+        reparsed = minidom.parseString(xml_str)
+        xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8')
 
-        if val < 100:
-            self.ui.btn_target.setEnabled(False)
-            self.ui.btn_source.setEnabled(False)
-
-
-        if not progress_bar.isVisible() and val < 100:
-            progress_bar.setVisible(True)
-        elif val == 999:
-            progress_bar.hide()
-            self.ui.btn_target.setEnabled(True)
-            self.ui.btn_source.setEnabled(True)
-
-        self.ui.bar_loading.setValue(val)
-    """
+        msgbox = QMessageBox()
+        msgbox.setWindowTitle('Message')
+        msgbox.setDetailedText(xml_str)
+        msgbox.setText('Merging!\t\t\t\t\t\t\t\t\t\t')
+        msgbox.exec_()
 
     def sourceDblClicked(self, value: QListWidgetItem):
         if hasattr(value, 'property'):
@@ -369,11 +372,6 @@ class MainWindow(QMainWindow):
         self.ui.list_source.verticalScrollBar().setValue(value)
         self.ui.list_target.verticalScrollBar().setValue(value)
         self.ui.list_merged.verticalScrollBar().setValue(value)
-
-    def syncRow(self, value):
-        self.ui.list_source.setCurrentRow(value)
-        self.ui.list_target.setCurrentRow(value)
-        self.ui.list_merged.setCurrentRow(value)
 
     # Uses open file dialog to setup a filepath
     def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
