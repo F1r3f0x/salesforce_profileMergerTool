@@ -1,9 +1,9 @@
 from typing import List
-from enum import Enum
 
-#from main import apiVersion
+# from main import apiVersion
 
-default_api_version = 44
+DEFAULT_API_VERSION = 44
+
 
 # Utils
 def bool_to_str(val):
@@ -11,6 +11,7 @@ def bool_to_str(val):
         return True
     else:
         return False
+
 
 class ProfileFieldType:
     def __init__(self, api_version=44):
@@ -32,15 +33,18 @@ class ProfileFieldType:
     @property
     def fields(self) -> dict:
         return self.model_fields
-    
-    @property
+
+    @fields.setter
     def fields(self, input_fields: dict):
         self._set_fields(input_fields)
 
 
 # Metadata Classes
 class ProfileActionOverride(ProfileFieldType):
-    def __init__(self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='', f_type='', api_version=default_api_version):
+    def __init__(
+        self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='',
+        f_type='', api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.actionName = actionName
         self.content = content
@@ -61,16 +65,20 @@ class ProfileActionOverride(ProfileFieldType):
             'recordType': self.recordType,
             'type': self.type,
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
-        
+
     def __str__(self):
         return f'{self.model_name}: {self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
-    
+
 
 class ProfileApplicationVisibility(ProfileFieldType):
-    def __init__(self, application='', default=False, visible=False, api_version=default_api_version):
+    def __init__(
+        self, application='', default=False, visible=False,
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.application = application
         self.__default = default
@@ -81,17 +89,19 @@ class ProfileApplicationVisibility(ProfileFieldType):
     @property
     def default(self):
         return self.__default
+
     @default.setter
     def default(self, value):
         self.__default = bool_to_str(value)
-    
+
     @property
     def visible(self):
         return self.__visible
+
     @visible.setter
     def visible(self, value):
         self.__visible = bool_to_str(value)
-        
+
     @property
     def toggles(self):
         return {
@@ -106,36 +116,41 @@ class ProfileApplicationVisibility(ProfileFieldType):
             'default': self.default,
             'visible': self.visible
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
 
     def __str__(self):
         return f'{self.model_name}: {self.application}'
-    
+
 
 class ProfileCategoryGroupVisibility(ProfileFieldType):
-    def __init__(self, dataCategories=[], dataCategoryGroup='', visibility='', api_version=default_api_version):
+    def __init__(
+        self, dataCategories=[], dataCategoryGroup='', visibility='',
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.dataCategories = dataCategories
         self.dataCategoryGroup = dataCategoryGroup
         self.__visibility = visibility
 
         self.model_name = 'categoryGroupVisibilities'
-        
+
     @property
     def visibility(self):
         return self.__visibility
+
     @visibility.setter
     def visibility(self, value):
         self.__visibility = bool_to_str(value)
-    
+
     @property
     def toggles(self):
         return {
             'visibility': self.visibility
         }
-    
+
     @property
     def fields(self):
         return {
@@ -143,6 +158,7 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
             'dataCategoryGroup': self.dataCategoryGroup,
             'visibility': self.visibility,
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -152,7 +168,7 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
 
 class ProfileApexClassAccess(ProfileFieldType):
-    def __init__(self, apexClass='', enabled=False, api_version=default_api_version):
+    def __init__(self, apexClass='', enabled=False, api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.apexClass = apexClass
         self.__enabled = enabled
@@ -162,6 +178,7 @@ class ProfileApexClassAccess(ProfileFieldType):
     @property
     def enabled(self):
         return self.__enabled
+
     @enabled.setter
     def enabled(self, value):
         self.__enabled = bool_to_str(value)
@@ -178,6 +195,7 @@ class ProfileApexClassAccess(ProfileFieldType):
             'apexClass': self.apexClass,
             'enabled': self.enabled
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -187,7 +205,7 @@ class ProfileApexClassAccess(ProfileFieldType):
 
 
 class ProfileCustomPermissions(ProfileFieldType):
-    def __init__(self, enabled=False, name='', api_version=default_api_version):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.__enabled = enabled
         self.name = name
@@ -197,11 +215,11 @@ class ProfileCustomPermissions(ProfileFieldType):
     @property
     def enabled(self):
         return self.__enabled
-    
+
     @enabled.setter
     def enabled(self, value):
         self.__enabled = bool_to_str(value)
-    
+
     @property
     def toggles(self):
         return {
@@ -214,6 +232,7 @@ class ProfileCustomPermissions(ProfileFieldType):
             'enabled': self.enabled,
             'name': self.name
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -223,17 +242,17 @@ class ProfileCustomPermissions(ProfileFieldType):
 
 
 class ProfileExternalDataSourceAccess(ProfileFieldType):
-    def __init__(self, enabled=False, externalDataSource='', api_version=default_api_version):
+    def __init__(self, enabled=False, externalDataSource='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.__enabled = enabled
         self.externalDataSource = externalDataSource
 
         self.model_name = 'externalDataSourceAccesses'
-        
+
     @property
     def enabled(self):
         return self.__enabled
-    
+
     @enabled.setter
     def enabled(self, value):
         self.__enabled = bool_to_str(value)
@@ -250,6 +269,7 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
             'enabled': self.enabled,
             'externalDataSource': self.externalDataSource
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -259,7 +279,10 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
 
 
 class ProfileFieldLevelSecurity(ProfileFieldType):
-    def __init__(self, editable=False, field='', readable=False, hidden=False, api_version=default_api_version):
+    def __init__(
+        self, editable=False, field='', readable=False, hidden=False,
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.__editable = editable
         self.field = field
@@ -271,20 +294,23 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
     @property
     def editable(self):
         return self.__editable
+
     @editable.setter
     def editable(self, value):
         self.__editable = bool_to_str(value)
-    
+
     @property
     def hidden(self):
         return self.__hidden
+
     @hidden.setter
     def hidden(self, value):
         self.__hidden = bool_to_str(value)
-    
+
     @property
     def readable(self):
         return self.__readable
+
     @readable.setter
     def readable(self, value):
         self.__readable = bool_to_str(value)
@@ -300,12 +326,13 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @property
     def fields(self):
-        return  {
+        return {
                 'editable': self.editable,
                 'hidden': self.hidden,
                 'field': self.field,
                 'readable': self.readable
             }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -315,7 +342,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
 
 class ProfileLayoutAssignments(ProfileFieldType):
-    def __init__(self, layout='', recordType='', api_version=default_api_version):
+    def __init__(self, layout='', recordType='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.layout = layout
         self.recordType = recordType
@@ -328,6 +355,7 @@ class ProfileLayoutAssignments(ProfileFieldType):
             'layout': self.layout,
             'recordType': self.recordType
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -340,7 +368,7 @@ class ProfileLayoutAssignments(ProfileFieldType):
 
 
 class ProfileLoginHours(ProfileFieldType):
-    def __init__(self, weekdayStart='', weekdayEnd='', api_version=default_api_version):
+    def __init__(self, weekdayStart='', weekdayEnd='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.weekdayStart = weekdayStart
         self.weekdayEnd = weekdayEnd
@@ -353,16 +381,17 @@ class ProfileLoginHours(ProfileFieldType):
             'weekdayStart': self.weekdayStart,
             'weekdayEnd': self.weekdayEnd
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
 
     def __str__(self):
         return f'{self.model_name}: {self.weekdayStart}: {self.weekdayEnd}'
-        
+
 
 class ProfileLoginIpRanges(ProfileFieldType):
-    def __init__(self, description='', endAddress='', startAddress='', api_version=default_api_version):
+    def __init__(self, description='', endAddress='', startAddress='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.description = description
         self.endAddress = endAddress
@@ -377,18 +406,21 @@ class ProfileLoginIpRanges(ProfileFieldType):
             'endAddress': self.endAddress,
             'startAddress': self.startAddress
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.description}: {self.startAddress} - {self.endAddress}' 
-    
+        return f'{self.model_name}: {self.description}: {self.startAddress} - {self.endAddress}'
+
 
 class ProfileObjectPermissions(ProfileFieldType):
-    def __init__(self, allowCreate=False, allowDelete=False, allowEdit=False,
+    def __init__(
+        self, allowCreate=False, allowDelete=False, allowEdit=False,
         allowRead=False, modifyAllRecords=False, f_object='', viewAllRecords=False,
-        api_version=default_api_version):
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.__allowCreate = allowCreate
         self.__allowDelete = allowDelete
@@ -396,12 +428,13 @@ class ProfileObjectPermissions(ProfileFieldType):
         self.__modifyAllRecords = modifyAllRecords
         self.object = f_object
         self.__viewAllRecords = viewAllRecords
-        
+
         self.model_name = 'objectPermissions'
 
     @property
     def allowCreate(self):
         return self.__allowCreate
+
     @allowCreate.setter
     def allowCreate(self, value):
         self.__allowCreate = bool_to_str(value)
@@ -409,6 +442,7 @@ class ProfileObjectPermissions(ProfileFieldType):
     @property
     def allowDelete(self):
         return self.__allowDelete
+
     @allowDelete.setter
     def allowDelete(self, value):
         self.__allowDelete = bool_to_str(value)
@@ -416,13 +450,15 @@ class ProfileObjectPermissions(ProfileFieldType):
     @property
     def allowEdit(self):
         return self.__allowEdit
+
     @allowEdit.setter
     def allowEdit(self, value):
         self.__allowEdit = bool_to_str(value)
-        
+
     @property
     def modifyAllRecords(self):
         return self.__modifyAllRecords
+
     @modifyAllRecords.setter
     def modifyAllRecords(self, value):
         self.__modifyAllRecords = bool_to_str(value)
@@ -430,6 +466,7 @@ class ProfileObjectPermissions(ProfileFieldType):
     @property
     def viewAllRecords(self):
         return self.__viewAllRecords
+
     @viewAllRecords.setter
     def viewAllRecords(self, value):
         self.__viewAllRecords = bool_to_str(value)
@@ -482,6 +519,7 @@ class ProfileObjectPermissions(ProfileFieldType):
                 'modifyAllRecords': self.modifyAllRecords,
                 'viewAllRecords': self.viewAllRecords,
             }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -491,7 +529,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
 
 class ProfileApexPageAccess(ProfileFieldType):
-    def __init__(self, apexPage='', enabled=False, api_version=default_api_version):
+    def __init__(self, apexPage='', enabled=False, api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.apexPage = apexPage
         self.__enabled = enabled
@@ -501,6 +539,7 @@ class ProfileApexPageAccess(ProfileFieldType):
     @property
     def enabled(self):
         return self.__enabled
+
     @enabled.setter
     def enabled(self, value):
         self.__enabled = bool_to_str(value)
@@ -517,6 +556,7 @@ class ProfileApexPageAccess(ProfileFieldType):
             'apexClass': self.apexPage,
             'enabled': self.enabled
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -526,7 +566,7 @@ class ProfileApexPageAccess(ProfileFieldType):
 
 
 class ProfileRecordTypeVisibility(ProfileFieldType):
-    def __init__(self, default=True, personAccountDefault=True, recordType='', visible=True, api_version=default_api_version):
+    def __init__(self, default=True, personAccountDefault=True, recordType='', visible=True, api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.default = default
         self.personAccountDefault = personAccountDefault
@@ -538,6 +578,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
     @property
     def default(self):
         return self.__default
+
     @default.setter
     def default(self, value):
         self.__default = bool_to_str(value)
@@ -545,6 +586,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
     @property
     def personAccountDefault(self):
         return self.__personAccountDefault
+
     @personAccountDefault.setter
     def personAccountDefault(self, value):
         self.__personAccountDefault = bool_to_str(value)
@@ -552,6 +594,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
     @property
     def visible(self):
         return self.__visible
+
     @visible.setter
     def visible(self, value):
         self.__visible = bool_to_str(value)
@@ -572,6 +615,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
             'recordType': self.recordType,
             'visible': self.visible
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -581,19 +625,20 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
 
 class ProfileTabVisibility(ProfileFieldType):
-    def __init__(self, tab='', visibility='', api_version=default_api_version):
+    def __init__(self, tab='', visibility='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.tab = tab
         self.visibility = visibility
 
         self.model_name = 'tabVisibilities'
-    
+
     @property
     def fields(self):
         return {
             'tab': self.tab,
             'visibilty': self.visibility
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -603,7 +648,7 @@ class ProfileTabVisibility(ProfileFieldType):
 
 
 class ProfileUserPermission(ProfileFieldType):
-    def __init__(self, enabled=False, name='', api_version=default_api_version):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.enabled = enabled
         self.name = name
@@ -613,6 +658,7 @@ class ProfileUserPermission(ProfileFieldType):
     @property
     def enabled(self):
         return self.__enabled
+
     @enabled.setter
     def enabled(self, value):
         self.__enabled = bool_to_str(value)
@@ -629,6 +675,7 @@ class ProfileUserPermission(ProfileFieldType):
             'enabled': self.enabled,
             'name': self.name
         }
+
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
@@ -656,8 +703,10 @@ classes_by_modelName = {
     ProfileUserPermission().model_name: ProfileUserPermission
 }
 
+
 class Profile:
-    def __init__(self, applicationVisibilities: List[ProfileApplicationVisibility],
+    def __init__(
+        self, applicationVisibilities: List[ProfileApplicationVisibility],
         categoryGroupVisibilities: List[ProfileCategoryGroupVisibility], classAccesses: List[ProfileApexClassAccess],
         custom: bool, customPermissions: List[ProfileCustomPermissions], description: str,
         externalDataSourceAccesses: List[ProfileExternalDataSourceAccess], fieldPermissions: List[ProfileFieldLevelSecurity],
@@ -665,8 +714,8 @@ class Profile:
         loginIpRanges: List[ProfileLoginIpRanges], objectPermissions: List[ProfileObjectPermissions],
         pageAccesses: List[ProfileApexPageAccess], profileActionOverrides: List[ProfileActionOverride],
         recordTypeVisibilities: List[ProfileRecordTypeVisibility], tabVisibilities: List[ProfileTabVisibility],
-        userLicense: str, userPermissions: List[ProfileUserPermission]):
-
+        userLicense: str, userPermissions: List[ProfileUserPermission], apiVersion=DEFAULT_API_VERSION
+    ):
         self.fullName = fullName
         self.layoutAssignments = layoutAssignments
         self.classAccesses = classAccesses
@@ -688,4 +737,4 @@ class Profile:
         if apiVersion < 45: self.applicationVisibilities = applicationVisibilities
         if apiVersion >= 41: self.categoryGroupVisibilities = categoryGroupVisibilities
         if apiVersion >= 17: self.loginIpRanges = loginIpRanges
-        if apiVersion>= 37 and apiVersion <= 44: self.profileActionOverrides = profileActionOverrides
+        if apiVersion >= 37 and apiVersion <= 44: self.profileActionOverrides = profileActionOverrides

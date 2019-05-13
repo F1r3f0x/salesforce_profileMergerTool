@@ -1,7 +1,6 @@
 # std
 import sys
 import re
-import math
 from xml.etree import ElementTree
 from pprint import pprint
 
@@ -9,7 +8,7 @@ from pprint import pprint
 from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
-from PySide2.QtWidgets import QScrollBar, QListWidget, QListWidgetItem, QMessageBox
+from PySide2.QtWidgets import QListWidget, QListWidgetItem, QMessageBox
 import qdarkstyle
 
 # mine
@@ -37,7 +36,7 @@ class GlobalVar:
 
     SOURCE_MERGED = False
     TARGET_MERGED = False
-        
+
     FROM_SOURCE = 'source'
     FROM_TARGET = 'target'
     FROM_MERGED = 'merged'
@@ -56,7 +55,7 @@ class GlobalVar:
 
 
 class ProfileItem(QListWidgetItem):
-    def __init__(self,id:str, _property:str, item_data:dict, from_profile:str, item_enabled, *args, **kwargs):
+    def __init__(self, id: str, _property: str, item_data: dict, from_profile: str, item_enabled):
         super().__init__()
         self.id = id
         self.property = _property
@@ -68,6 +67,7 @@ class ProfileItem(QListWidgetItem):
     @property
     def item_enabled(self):
         return self.__item_enabled
+
     @item_enabled.setter
     def item_enabled(self, value: bool):
         self.__item_enabled = value
@@ -82,7 +82,7 @@ class ProfileItem(QListWidgetItem):
 
     @property
     def copy(self):
-        return ProfileItem (
+        return ProfileItem(
             self.id,
             self.property,
             self.item_data,
@@ -91,8 +91,8 @@ class ProfileItem(QListWidgetItem):
         )
 
     def __eq__(self, other):
-        if other == None:
-            return self.id == None
+        if other is None:
+            return self.id is None
         return self.id == other.id and self.property == other.property
 
     def __str__(self):
@@ -100,11 +100,10 @@ class ProfileItem(QListWidgetItem):
 
 
 class ProfileScanner(QtCore.QThread):
-    # Progress Signal
     updateProgress = QtCore.Signal(int)
     addItems = QtCore.Signal(dict)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         QtCore.QThread.__init__(self)
         self.profile_filepath = ''
         self.from_profile = ''
@@ -125,46 +124,46 @@ class ProfileScanner(QtCore.QThread):
                 GlobalVar.Source.PROPERTIES = {}
             if len(GlobalVar.Target.PROPERTIES) > 0 and self.from_profile == GlobalVar.FROM_TARGET:
                 GlobalVar.Target.PROPERTIES = {}
-            
 
         # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
-        root = tree.getroot()
+        tree_root = tree.getroot()
 
         # This regex is for removing the namespace prefix of the tag
         namespace_pattern = '^{.*}'
         namespace_regex = re.compile(namespace_pattern)
 
-        tag, index, fields_dict = '', 0, {}
-        for profileField in root:
-            namespace = namespace_regex.match(profileField.tag).group()
+        tag, fields_dict = '', {}
+
+        # Create ProfileItems with the profile
+        for prof_field_element in tree_root:
+            namespace = namespace_regex.match(prof_field_element.tag).group()
 
             if self.from_profile == GlobalVar.FROM_SOURCE and not GlobalVar.Source.NAMESPACE:
                 GlobalVar.Source.NAMESPACE = namespace
             if self.from_profile == GlobalVar.FROM_TARGET and not GlobalVar.Target.NAMESPACE:
                 GlobalVar.Target.NAMESPACE = namespace
 
-            fieldType = profileField.tag.replace(namespace, '')
+            field_type_name = prof_field_element.tag.replace(namespace, '')
 
             """
-                if profileField.tag != tag:
-                    print('tag: ', profileField.tag)
+                if prof_field_element.tag != tag:
+                    print('tag: ', prof_field_element.tag)
                     print('namespace: ', ns)
-                    print('fieldType: ', profileField.tag.replace(ns,''))
-                print('attribute: ', profileField.attrib)
+                    print('field_type_name: ', prof_field_element.tag.replace(ns,''))
+                print('attribute: ', prof_field_element.attrib)
             """
 
-            # Get class
-            model_class = models.classes_by_modelName.get(fieldType)
-            if model_class:
+            model_class_name = models.classes_by_modelName.get(field_type_name)  # TODO: create exception if not found
+            if model_class_name:
                 fields = {}
-                for child in profileField:
-                    tag = child.tag.replace(namespace, '')
-                    fields[tag] = child.text
-                profile_field = model_class()
+                for field_child in prof_field_element:
+                    tag = field_child.tag.replace(namespace, '')
+                    fields[tag] = field_child.text
+                profile_field = model_class_name()
                 profile_field.fields = fields
 
-                toggles, _id, item = profile_field.toggles, str(profile_field), None
+                toggles, _id = profile_field.toggles, str(profile_field)
                 if toggles:
                     for key, value in toggles.items():
                         full_property = f'{str(profile_field)} --- {key}'
@@ -172,21 +171,18 @@ class ProfileScanner(QtCore.QThread):
                 else:
                     fields_dict[_id] = ProfileItem(_id, _id, {'data': profile_field.fields}, self.from_profile, GlobalVar.ITEM_NOTOGGLE)
 
+        # Fill global lists
         if len(fields_dict) > 0:
-            # Fill global lists
             for key, value in fields_dict.items():
                 GlobalVar.Merged.PROPERTIES[key] = value
                 if self.from_profile == GlobalVar.FROM_SOURCE:
                     GlobalVar.Source.PROPERTIES[key] = value
                 if self.from_profile == GlobalVar.FROM_TARGET:
                     GlobalVar.Target.PROPERTIES[key] = value
+            GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = len(GlobalVar.Source.PROPERTIES) > 0, len(GlobalVar.Target.PROPERTIES) > 0
 
-            # Set flags
-            GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
-            GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
-
-            self.addItems.emit( {
-                'from': self.from_profile, # with love from
+            self.addItems.emit({
+                'from': self.from_profile,  # with love from
                 'items': fields_dict
             })
 
@@ -204,26 +200,31 @@ class MainWindow(QMainWindow):
         for model_name in models.classes_by_modelName.keys():
             self.ui.cmb_filter.addItem(model_name)
 
-        #ui.bar_loading.hide()
+        # ui.bar_loading.hide()
 
         self.ui.list_source.clear()
-        
-        self.ui.btn_source.clicked.connect(lambda: self.find_profile_file(ui.le_source, GlobalVar.FROM_SOURCE, ui.list_source))
-        self.ui.btn_target.clicked.connect(lambda: self.find_profile_file(ui.le_target, GlobalVar.FROM_TARGET ,ui.list_target))
 
-        self.ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
+        self.ui.btn_source.clicked.connect(
+            lambda: self.find_profile_file(ui.le_source, GlobalVar.FROM_SOURCE, ui.list_source)
+        )
+        self.ui.btn_target.clicked.connect(
+            lambda: self.find_profile_file(ui.le_target, GlobalVar.FROM_TARGET, ui.list_target)
+        )
+
+        # self.ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
 
         self.lastItem = None
-        self.ui.list_source.itemDoubleClicked.connect(self.sourceClicked)
-        self.ui.list_target.itemDoubleClicked.connect(self.targetClicked)
+        self.ui.list_source.itemDoubleClicked.connect(self.sourceDblClicked)
+        self.ui.list_target.itemDoubleClicked.connect(self.targetDblClicked)
+        self.ui.list_merged.itemDoubleClicked.connect(self.mergedDblClicked)
 
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
 
-        #self.ui.list_source.currentRowChanged.connect(self.syncRow)
-        #self.ui.list_target.currentRowChanged.connect(self.syncRow)
-        #self.ui.list_merged.currentRowChanged.connect(self.syncRow)
+        # self.ui.list_source.currentRowChanged.connect(self.syncRow)
+        # self.ui.list_target.currentRowChanged.connect(self.syncRow)
+        # self.ui.list_merged.currentRowChanged.connect(self.syncRow)
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
@@ -247,17 +248,17 @@ class MainWindow(QMainWindow):
         self.ui.bar_loading.setValue(val)
     """
 
-    def sourceClicked(self, value:QListWidgetItem):
+    def sourceDblClicked(self, value: QListWidgetItem):
         try:
             msgBox = QMessageBox()
             msgBox.setText(value.property)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.setDefaultButton(QMessageBox.Ok)
-            ret = msgBox.exec_()
-        except:
+            msgBox.exec_()
+        except Exception:
             pass
 
-    def targetClicked(self, value:QListWidgetItem):
+    def targetDblClicked(self, value: QListWidgetItem):
         """
             if self.lastItem == None:
                 self.lastItem = value
@@ -270,14 +271,15 @@ class MainWindow(QMainWindow):
         """
         print('target', value)
 
-
+    def mergedDblClicked(self, value: QListWidgetItem):
+        print('merged', value)
 
     def addItems(self, package: dict):
         if self.list_target:
             merged_dict = GlobalVar.Merged.PROPERTIES
 
-            new_items = package['items']
-            list_from = package['from']
+            # new_items = package['items']
+            # list_from = package['from']
 
             # Fill merged list
             self.ui.list_merged.clear()
@@ -305,12 +307,11 @@ class MainWindow(QMainWindow):
         self.ui.list_source.verticalScrollBar().setValue(value)
         self.ui.list_target.verticalScrollBar().setValue(value)
         self.ui.list_merged.verticalScrollBar().setValue(value)
-    
+
     def syncRow(self, value):
         self.ui.list_source.setCurrentRow(value)
         self.ui.list_target.setCurrentRow(value)
         self.ui.list_merged.setCurrentRow(value)
-
 
     # Uses open file dialog to setup a filepath
     def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
@@ -336,13 +337,12 @@ class MainWindow(QMainWindow):
             if from_profile == GlobalVar.FROM_TARGET:
                 self.ui.lbl_target_2.setText(file_name)
 
-
         return file_path
 
 
 if __name__ == "__main__":
     app = QApplication([])
-    
+
     # Setup Style
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
 
