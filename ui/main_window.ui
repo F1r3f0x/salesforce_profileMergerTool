@@ -309,26 +309,26 @@
      </spacer>
     </item>
     <item>
-     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0,0">
+     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="0" column="2">
-       <widget class="QLabel" name="lbl_target_2">
+      <item row="1" column="1">
+       <widget class="QListWidget" name="list_merged">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="text">
-         <string>&lt;&lt; Profile B</string>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+        <property name="uniformItemSizes">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -345,6 +345,25 @@
         </property>
         <property name="dragEnabled">
          <bool>false</bool>
+        </property>
+        <property name="uniformItemSizes">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="lbl_target_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>&lt;&lt; Profile B</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -364,20 +383,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QListWidget" name="list_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" rowspan="2">
+      <item row="1" column="0">
        <widget class="QListWidget" name="list_source">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -390,6 +396,9 @@
         </property>
         <property name="dragEnabled">
          <bool>false</bool>
+        </property>
+        <property name="uniformItemSizes">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -466,7 +475,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -475,7 +484,6 @@
  <tabstops>
   <tabstop>cmb_api</tabstop>
   <tabstop>btn_target</tabstop>
-  <tabstop>list_source</tabstop>
   <tabstop>btn_start</tabstop>
  </tabstops>
  <resources/>

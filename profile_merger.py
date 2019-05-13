@@ -3,6 +3,7 @@ import sys
 import re
 from xml.etree import ElementTree
 from pprint import pprint
+from copy import deepcopy
 
 # qt
 from PySide2 import QtCore
@@ -16,6 +17,11 @@ from ui.main_window import Ui_MainWindow
 import models
 
 # Brushes
+brush_f_normal = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+brush_f_normal.setStyle(QtCore.Qt.SolidPattern)
+brush_b_normal = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+brush_b_normal.setStyle(QtCore.Qt.NoBrush)
+
 brush_b_enabled = QtGui.QBrush(QtGui.QColor(0, 69, 0))
 brush_b_enabled.setStyle(QtCore.Qt.SolidPattern)
 
@@ -53,42 +59,78 @@ class GlobalVar:
         NAMESPACE = ''
         PROPERTIES = {}
 
+    class Items:
+        source = {}
+        target = {}
+        merged = {}
+
 
 class ProfileItem(QListWidgetItem):
-    def __init__(self, id: str, _property: str, item_data: dict, from_profile: str, item_enabled):
+    def __init__(self, id: str, _property: str, item: dict, from_profile: str, toggle_value):
         super().__init__()
         self.id = id
         self.property = _property
         self.setText(_property)
-        self.item_data = item_data
-        self.item_enabled = item_enabled
+        self._item_current = deepcopy(item)
+        self.item_original = item
+        self._item_toggle = toggle_value
+        self._item_disabled = False
         self.from_profile = from_profile
+        self._refresh_styles()
 
     @property
-    def item_enabled(self):
-        return self.__item_enabled
+    def toggle_value(self):
+        return self._item_toggle
 
-    @item_enabled.setter
-    def item_enabled(self, value: bool):
-        self.__item_enabled = value
-        if value != GlobalVar.ITEM_NOTOGGLE:
-            if value:
-                self.setBackground(brush_b_enabled)
-            else:
-                self.setBackground(brush_b_disabled)
+    @toggle_value.setter
+    def toggle_value(self, value: bool):
+        self._item_toggle = value
+        self._refresh_styles()
 
-    def compare_field_type(self, other):
-        return self.id == other.id
+    @property
+    def item_disabled(self):
+        return self._item_disabled
+
+    @item_disabled.setter
+    def item_disabled(self, value):
+        self._item_disabled = value
+        self._refresh_styles()
+
+    @property
+    def item(self):
+        return self._item_current
+
+    @item.setter
+    def item(self, value):
+        self._item_current = value
 
     @property
     def copy(self):
         return ProfileItem(
             self.id,
             self.property,
-            self.item_data,
+            self.item,
             self.from_profile,
-            self.item_enabled
+            self.toggle_value
         )
+
+    def compare_field_type(self, other):
+        return self.id == other.id
+
+    def _refresh_styles(self):
+        if self.toggle_value != GlobalVar.ITEM_NOTOGGLE:
+            if self.toggle_value:
+                self.setBackground(brush_b_enabled)
+            else:
+                self.setBackground(brush_b_disabled)
+
+        if self.item_disabled:
+            self.setBackground(brush_b_removed)
+            self.setForeground(brush_f_removed)
+        else:
+            self.setForeground(brush_f_normal)
+            if self.toggle_value == GlobalVar.ITEM_NOTOGGLE:
+                self.setBackground(brush_b_normal)
 
     def __eq__(self, other):
         if other is None:
@@ -168,12 +210,12 @@ class ProfileScanner(QtCore.QThread):
                     for key, value in toggles.items():
                         full_property = f'{str(profile_field)} --- {key}'
                         fields_dict[full_property] = ProfileItem(
-                            _id, full_property, {'data': profile_field.fields},
+                            _id, full_property, profile_field,
                             self.from_profile, value
                         )
                 else:
                     fields_dict[_id] = ProfileItem(
-                        _id, _id, {'data': profile_field.fields}, self.from_profile,
+                        _id, _id, profile_field, self.from_profile,
                         GlobalVar.ITEM_NOTOGGLE
                     )
 
@@ -206,8 +248,6 @@ class MainWindow(QMainWindow):
         for model_name in models.classes_by_modelName.keys():
             self.ui.cmb_filter.addItem(model_name)
 
-        # ui.bar_loading.hide()
-
         self.ui.list_source.clear()
 
         self.ui.btn_source.clicked.connect(
@@ -217,12 +257,10 @@ class MainWindow(QMainWindow):
             lambda: self.find_profile_file(ui.le_target, GlobalVar.FROM_TARGET, ui.list_target)
         )
 
-        # self.ui.btn_start.clicked.connect(lambda: pprint(profile_list_source[0]))
-
         self.lastItem = None
-        self.ui.list_source.itemDoubleClicked.connect(self.sourceDblClicked)
-        self.ui.list_target.itemDoubleClicked.connect(self.targetDblClicked)
-        self.ui.list_merged.itemDoubleClicked.connect(self.mergedDblClicked)
+        self.ui.list_source.itemClicked.connect(self.sourceDblClicked)
+        self.ui.list_target.itemClicked.connect(self.targetDblClicked)
+        self.ui.list_merged.itemClicked.connect(self.mergedDblClicked)
 
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
@@ -234,6 +272,25 @@ class MainWindow(QMainWindow):
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
+
+    def toggleItem(self, id: str, from_profile: str, row=None):
+        if from_profile == GlobalVar.FROM_MERGED:
+            merged_item = GlobalVar.Items.merged[id]
+            merged_item.item_disabled = not merged_item.item_disabled
+        else:
+            if not row:
+                merged_item = GlobalVar.Items.merged[id]
+                merged_item.item_disabled = False
+
+                if from_profile == GlobalVar.FROM_SOURCE:
+                    source_item = GlobalVar.Source.PROPERTIES[id]
+                    merged_item.toggle_value = source_item.toggle_value
+                if from_profile == GlobalVar.FROM_TARGET:
+                    target_item = GlobalVar.Target.PROPERTIES[id]
+                    merged_item.toggle_value = target_item.toggle_value
+
+            else:
+                self.ui.list_merged.item(row).item_disabled = not self.ui.list_merged.item(row).item_disabled
 
     """
     def updateProgressBar(self, val: int):
@@ -255,30 +312,23 @@ class MainWindow(QMainWindow):
     """
 
     def sourceDblClicked(self, value: QListWidgetItem):
-        try:
-            msgBox = QMessageBox()
-            msgBox.setText(value.property)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.setDefaultButton(QMessageBox.Ok)
-            msgBox.exec_()
-        except Exception:
-            pass
+        if hasattr(value, 'property'):
+            self.toggleItem(value.property, GlobalVar.FROM_SOURCE)
+        else:
+            self.toggleItem('', GlobalVar.FROM_SOURCE, row=self.ui.list_source.row(value))
+        value.setSelected(False)
 
     def targetDblClicked(self, value: QListWidgetItem):
-        """
-            if self.lastItem == None:
-                self.lastItem = value
-
-            pprint(self.lastItem.property)
-            pprint(value.property)
-            pprint(self.lastItem == value)
-
-            self.lastItem = value
-        """
-        print('target', value)
+        if hasattr(value, 'property'):
+            self.toggleItem(value.property, GlobalVar.FROM_TARGET)
+        else:
+            self.toggleItem('', GlobalVar.FROM_TARGET, row=self.ui.list_target.row(value))
+        value.setSelected(False)
 
     def mergedDblClicked(self, value: QListWidgetItem):
-        print('merged', value)
+        if hasattr(value, 'property'):
+            self.toggleItem(value.property, GlobalVar.FROM_MERGED)
+        value.setSelected(False)
 
     def addItems(self, package: dict):
         if self.list_target:
@@ -290,7 +340,9 @@ class MainWindow(QMainWindow):
             # Fill merged list
             self.ui.list_merged.clear()
             for value in sorted(merged_dict.values()):
-                self.ui.list_merged.addItem(value.copy)
+                item = value.copy
+                GlobalVar.Items.merged[item.property] = item
+                self.ui.list_merged.addItem(item)
 
             # Compare to merged and fill
             self.ui.list_source.clear()
@@ -308,6 +360,10 @@ class MainWindow(QMainWindow):
                     self.ui.list_source.addItem(item_source.copy)
                 else:
                     self.ui.list_source.addItem('')
+
+            print(f'SOURCE: {self.ui.list_source.count()}')
+            print(f'TARGET: {self.ui.list_target.count()}')
+            print(f'MERGED: {self.ui.list_source.count()}')
 
     def syncScroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
