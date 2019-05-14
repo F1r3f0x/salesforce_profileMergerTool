@@ -13,7 +13,7 @@
     <applicationVisibilities>
         <application>CustomApp3</application>
         <default>false</default>
-        <visible>fakse</visible>
+        <visible>false</visible>
     </applicationVisibilities>
     <classAccesses>
         <apexClass>AwesomeCustomClass1</apexClass>
