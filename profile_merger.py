@@ -59,6 +59,7 @@ class GlobalVar:
     class Merged:
         NAMESPACE = None
         PROPERTIES = {}
+        MODEL_FIELDS = {}
 
     class Items:
         source = {}
@@ -67,12 +68,13 @@ class GlobalVar:
 
 
 class ProfileItem(QListWidgetItem):
-    def __init__(self, id: str, _property: str, item: dict, from_profile: str, toggle_value):
+    def __init__(self, id='', _property='', field='', item={}, from_profile='', toggle_value=True):
         super().__init__()
         self.id = id
         self.property = _property
         self.setText(_property)
         self._item_current = deepcopy(item)
+        self.item_field = field
         self.item_original = item
         self._item_toggle = toggle_value
         self._item_disabled = False
@@ -108,11 +110,12 @@ class ProfileItem(QListWidgetItem):
     @property
     def copy(self):
         return ProfileItem(
-            self.id,
-            self.property,
-            self.item,
-            self.from_profile,
-            self.toggle_value
+            id=self.id,
+            _property=self.property,
+            field=self.item_field,
+            item=self.item,
+            from_profile=self.from_profile,
+            toggle_value=self.toggle_value
         )
 
     def compare_field_type(self, other):
@@ -210,17 +213,20 @@ class ProfileScanner(QtCore.QThread):
                 profile_field.fields = fields
 
                 toggles, _id = profile_field.toggles, str(profile_field)
+
+                GlobalVar.Merged.MODEL_FIELDS[_id] = profile_field
+
                 if toggles:
                     for key, value in toggles.items():
                         full_property = f'{str(profile_field)} --- {key}'
                         fields_dict[full_property] = ProfileItem(
-                            _id, full_property, profile_field,
-                            self.from_profile, value
+                            id=_id, _property=full_property, item=profile_field,
+                            from_profile=self.from_profile, toggle_value=value, field=key
                         )
                 else:
                     fields_dict[_id] = ProfileItem(
-                        _id, _id, profile_field, self.from_profile,
-                        GlobalVar.ITEM_NOTOGGLE
+                        id=_id, _property=_id, item=profile_field, from_profile=self.from_profile,
+                        toggle_value=GlobalVar.ITEM_NOTOGGLE, field=key
                     )
 
         # Fill global lists
@@ -298,19 +304,23 @@ class MainWindow(QMainWindow):
     def startBtnClicked(self):
         xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
         xml_tree = ElementTree.ElementTree(element=xml_root)
-        
-        for profile_field in GlobalVar.Items.merged:
-            ElementTree.SubElement(xml_root, 'b').text = 'hello'
-            ElementTree.SubElement(xml_root, 'c', attrib={'foo': 'bar'})
-            ElementTree.SubElement(xml_root, 'd').text = 'frick'
-            
+
+        for model_field in GlobalVar.Merged.MODEL_FIELDS.values():
+            c = ElementTree.SubElement(xml_root, model_field.model_name)
+            for field, value in model_field.fields.items():
+                if value:
+                    if type(value) == bool:
+                        value = str(value).lower()
+                    ElementTree.SubElement(c, field).text = value
+
         xml_str = ElementTree.tostring(xml_root, 'utf-8')
         reparsed = minidom.parseString(xml_str)
         xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8')
+        print(xml_str)
 
         msgbox = QMessageBox()
         msgbox.setWindowTitle('Message')
-        msgbox.setDetailedText(xml_str)
+        msgbox.setInformativeText(xml_str)
         msgbox.setText('Merging!\t\t\t\t\t\t\t\t\t\t')
         msgbox.exec_()
 

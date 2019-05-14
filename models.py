@@ -636,7 +636,7 @@ class ProfileTabVisibility(ProfileFieldType):
     def fields(self):
         return {
             'tab': self.tab,
-            'visibilty': self.visibility
+            'visibility': self.visibility
         }
 
     @fields.setter
