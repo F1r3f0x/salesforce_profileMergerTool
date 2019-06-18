@@ -303,9 +303,10 @@ class MainWindow(QMainWindow):
 
     def startBtnClicked(self):
         xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
-        xml_tree = ElementTree.ElementTree(element=xml_root)
+        # xml_tree = ElementTree.ElementTree(element=xml_root)
 
-        for model_field in GlobalVar.Merged.MODEL_FIELDS.values():
+        for model_item in GlobalVar.Items.merged.values():
+            model_field = model_item.item
             c = ElementTree.SubElement(xml_root, model_field.model_name)
             for field, value in model_field.fields.items():
                 if value:

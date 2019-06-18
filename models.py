@@ -1,25 +1,38 @@
-from typing import List
+# -*- coding: utf-8 -*-
+""" SF Profile Migrator - Metadata Models.
 
-# from main import apiVersion
+This module has the definitions for the differente Metadata types for Salesforce Profiles
+
+Attributes:
+    DEFAULT_API_VERSION (int):  The API version to use when creating objects.
+
+Copyright: Patricio Labin Correa - 2019
+"""
+
+from typing import List
+from utils import bool_to_str
 
 DEFAULT_API_VERSION = 44
 
 
-# Utils
-def bool_to_str(val):
-    if str(val).strip().lower() == 'true':
-        return True
-    else:
-        return False
-
-
 class ProfileFieldType:
-    def __init__(self, api_version=44):
+    """Base Metadata class
+    Args:
+        api_version (int): (default=DEFAULT_API_VERSION) Human readable string describing
+        the exception.
+
+    Attributes:
+        api_version (int): Human readable string describing the exception.
+        model_name (str): Salesforce Metadata API name.
+        model_fields (dict): Dict with the field name and value.
+        model_toggles (dict): Dict with toggable fields and values.
+    """
+
+    def __init__(self, api_version=DEFAULT_API_VERSION):
         self.api_version = api_version
         self.model_name = ''
         self.model_fields = {}
         self.model_toggles = {}
-        self.model_special_field = ''
 
     def _set_fields(self, input_fields: dict):
         if input_fields:
@@ -41,6 +54,15 @@ class ProfileFieldType:
 
 # Metadata Classes
 class ProfileActionOverride(ProfileFieldType):
+    """ A list of the Lightning Experience Home page action overrides that are assigned to
+    this profile. When a user logs in with a profile, a matching ProfileActionOverride
+    assignment takes precedence over existing overrides for the Home tab specified in
+    ActionOverride.
+
+    This field is available in API versions 37.0 to 44.0.
+
+    https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
+    """
     def __init__(
         self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='',
         f_type='', api_version=DEFAULT_API_VERSION
@@ -425,6 +447,7 @@ class ProfileObjectPermissions(ProfileFieldType):
         self.__allowCreate = allowCreate
         self.__allowDelete = allowDelete
         self.__allowEdit = allowEdit
+        self.__allowRead = allowRead
         self.__modifyAllRecords = modifyAllRecords
         self.object = f_object
         self.__viewAllRecords = viewAllRecords
@@ -456,6 +479,14 @@ class ProfileObjectPermissions(ProfileFieldType):
         self.__allowEdit = bool_to_str(value)
 
     @property
+    def allowRead(self):
+        return self.__allowRead
+
+    @allowRead.setter
+    def allowRead(self, value):
+        self.__allowRead = bool_to_str(value)
+
+    @property
     def modifyAllRecords(self):
         return self.__modifyAllRecords
 
@@ -483,13 +514,15 @@ class ProfileObjectPermissions(ProfileFieldType):
             return {
                 'allowCreate': self.allowCreate,
                 'allowDelete': self.allowDelete,
-                'allowEdit': self.allowEdit
+                'allowEdit': self.allowEdit,
+                'allowRead': self.allowRead
             }
         else:
             return {
                 'allowCreate': self.allowCreate,
                 'allowDelete': self.allowDelete,
                 'allowEdit': self.allowEdit,
+                'allowRead': self.allowRead,
                 'modifyAllRecords': self.modifyAllRecords,
                 'viewAllRecords': self.viewAllRecords,
             }
@@ -508,6 +541,7 @@ class ProfileObjectPermissions(ProfileFieldType):
                 'allowCreate': self.allowCreate,
                 'allowDelete': self.allowDelete,
                 'allowEdit': self.allowEdit,
+                'allowRead': self.allowRead,
                 'object': self.object
             }
         else:
@@ -515,6 +549,7 @@ class ProfileObjectPermissions(ProfileFieldType):
                 'allowCreate': self.allowCreate,
                 'allowDelete': self.allowDelete,
                 'allowEdit': self.allowEdit,
+                'allowRead': self.allowRead,
                 'object': self.object,
                 'modifyAllRecords': self.modifyAllRecords,
                 'viewAllRecords': self.viewAllRecords,
