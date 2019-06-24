@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """ SF Profile Migrator - Metadata Models.
 
-This module has the definitions for the differente Metadata types for Salesforce Profiles
+This module has the definitions for the differente Metadata types for Salesforce Profiles.
+Checkout the docs: https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
 
 Attributes:
     DEFAULT_API_VERSION (int):  The API version to use when creating objects.
@@ -54,15 +55,6 @@ class ProfileFieldType:
 
 # Metadata Classes
 class ProfileActionOverride(ProfileFieldType):
-    """ A list of the Lightning Experience Home page action overrides that are assigned to
-    this profile. When a user logs in with a profile, a matching ProfileActionOverride
-    assignment takes precedence over existing overrides for the Home tab specified in
-    ActionOverride.
-
-    This field is available in API versions 37.0 to 44.0.
-
-    https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
-    """
     def __init__(
         self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='',
         f_type='', api_version=DEFAULT_API_VERSION
