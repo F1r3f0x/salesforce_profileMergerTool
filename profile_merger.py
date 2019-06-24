@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
                 print(model_field.fields)
                 c = ElementTree.SubElement(xml_root, model_field.model_name)
                 for field, value in model_field.fields.items():
-                    if value is not None:
+                    if value is not None and value != '':
                         if type(value) is bool:
                             value = str(value).lower()
                         ElementTree.SubElement(c, field).text = value
