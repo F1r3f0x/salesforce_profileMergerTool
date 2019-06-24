@@ -303,27 +303,41 @@ class MainWindow(QMainWindow):
 
     def startBtnClicked(self):
         xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
-        # xml_tree = ElementTree.ElementTree(element=xml_root)
 
+        current_id = None
         for model_item in GlobalVar.Items.merged.values():
-            model_field = model_item.item
-            c = ElementTree.SubElement(xml_root, model_field.model_name)
-            for field, value in model_field.fields.items():
-                if value:
-                    if type(value) == bool:
-                        value = str(value).lower()
-                    ElementTree.SubElement(c, field).text = value
+            if current_id != model_item.id:
+                current_id = model_item.id
+                model_field = model_item.item
+                print(model_field)
+                print(model_field.__dict__)
+                print(model_field.fields)
+                c = ElementTree.SubElement(xml_root, model_field.model_name)
+                for field, value in model_field.fields.items():
+                    if value is not None:
+                        if type(value) is bool:
+                            value = str(value).lower()
+                        ElementTree.SubElement(c, field).text = value
 
-        xml_str = ElementTree.tostring(xml_root, 'utf-8')
+        xml_str = ElementTree.tostring(xml_root, 'utf-8')   
         reparsed = minidom.parseString(xml_str)
-        xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8')
-        print(xml_str)
+        xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
-        msgbox = QMessageBox()
-        msgbox.setWindowTitle('Message')
-        msgbox.setInformativeText(xml_str)
-        msgbox.setText('Merging!\t\t\t\t\t\t\t\t\t\t')
-        msgbox.exec_()
+        file_path, _filter = QFileDialog.getSaveFileName(
+            self,
+            'Save your Profile file',
+            '',
+            '*.xml *.profile'
+        )
+
+        if file_path != '':
+            with open(file_path, 'w') as file_pointer:
+                file_pointer.write(xml_str)
+
+            msgbox = QMessageBox()
+            msgbox.setWindowTitle('Merging Results')
+            msgbox.setText('DONE!')
+            msgbox.exec_()
 
     def sourceDblClicked(self, value: QListWidgetItem):
         if hasattr(value, 'property'):
@@ -387,7 +401,7 @@ class MainWindow(QMainWindow):
 
     # Uses open file dialog to setup a filepath
     def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
-        file_path, _filtro = QFileDialog.getOpenFileName(
+        file_path, _filter = QFileDialog.getOpenFileName(
             self,
             'Pick your Profile file',
             '',
