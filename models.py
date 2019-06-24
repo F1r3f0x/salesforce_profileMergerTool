@@ -340,12 +340,19 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @property
     def fields(self):
-        return {
-                'editable': self.editable,
-                'hidden': self.hidden,
-                'field': self.field,
-                'readable': self.readable
-            }
+        if self.api_version <= 22:
+            return {
+                    'editable': self.editable,
+                    'hidden': self.hidden,
+                    'field': self.field,
+                    'readable': self.readable
+                }
+        else:
+            return {
+                    'editable': self.editable,
+                    'field': self.field,
+                    'readable': self.readable
+                }
 
     @fields.setter
     def fields(self, input_dict: dict):
@@ -542,8 +549,8 @@ class ProfileObjectPermissions(ProfileFieldType):
                 'allowDelete': self.allowDelete,
                 'allowEdit': self.allowEdit,
                 'allowRead': self.allowRead,
-                'object': self.object,
                 'modifyAllRecords': self.modifyAllRecords,
+                'object': self.object,
                 'viewAllRecords': self.viewAllRecords,
             }
 
