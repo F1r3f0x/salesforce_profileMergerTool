@@ -19,8 +19,7 @@ DEFAULT_API_VERSION = 44
 class ProfileFieldType:
     """Base Metadata class
     Args:
-        api_version (int): (default=DEFAULT_API_VERSION) Human readable string describing
-        the exception.
+        api_version (int): (default=DEFAULT_API_VERSION) Salesforce API Version
 
     Attributes:
         api_version (int): Human readable string describing the exception.
@@ -335,7 +334,8 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
             'editable': self.editable,
             'readable': self.readable
         }
-        if self.api_version <= 22: toggles['hidden'] = self.hidden
+        if self.api_version <= 22:
+            toggles['hidden'] = self.hidden
         return toggles
 
     @property
