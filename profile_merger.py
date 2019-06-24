@@ -353,7 +353,8 @@ class MainWindow(QMainWindow):
 
             # Fill merged list
             self.ui.list_merged.clear()
-            for value in sorted(merged_dict.values()):
+            for key in sorted(merged_dict.keys()):
+                value = merged_dict[key]
                 item = value.copy
                 GlobalVar.Items.merged[item.property] = item
                 self.ui.list_merged.addItem(item)
