@@ -331,7 +331,7 @@ class MainWindow(QMainWindow):
         )
 
         if file_path != '':
-            with open(file_path, 'w') as file_pointer:
+            with open(file_path, 'w', encoding='utf-8') as file_pointer:
                 file_pointer.write(xml_str)
 
             msgbox = QMessageBox()
