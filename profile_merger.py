@@ -4,7 +4,6 @@ import re
 from xml.etree import ElementTree
 from xml.dom import minidom
 from pprint import pprint
-from copy import deepcopy
 
 # qt
 from PySide2 import QtCore
@@ -59,7 +58,6 @@ class GlobalVar:
     class Merged:
         NAMESPACE = None
         PROPERTIES = {}
-        MODEL_FIELDS = {}
 
     class Items:
         source = {}
@@ -67,6 +65,7 @@ class GlobalVar:
         merged = {}
 
 
+"""
 class ProfileItem(QListWidgetItem):
     def __init__(self, id='', _property='', field='', item={}, from_profile='', toggle_value=True):
         super().__init__()
@@ -143,6 +142,7 @@ class ProfileItem(QListWidgetItem):
 
     def __str__(self):
         return f'<ProfileItem: {self.property}>'
+"""
 
 
 class ProfileScanner(QtCore.QThread):
@@ -157,10 +157,14 @@ class ProfileScanner(QtCore.QThread):
     # Overloaded, is run by calling its start() function
     def run(self):
         # Reset tables
-        if GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and len(GlobalVar.Merged.PROPERTIES) > 0:
+        if (GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and
+                len(GlobalVar.Merged.PROPERTIES) > 0):
             GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = False, False
 
-            properties_rescan = GlobalVar.Target.PROPERTIES if self.from_profile == GlobalVar.FROM_SOURCE else GlobalVar.Source.PROPERTIES
+            if self.from_profile == GlobalVar.FROM_SOURCE:
+                properties_rescan = GlobalVar.Target.PROPERTIES
+            else:
+                properties_rescan = GlobalVar.Source.PROPERTIES
 
             GlobalVar.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
@@ -180,7 +184,6 @@ class ProfileScanner(QtCore.QThread):
         namespace_regex = re.compile(namespace_pattern)
 
         tag, fields_dict = '', {}
-
         # Create ProfileItems with the profile
         for prof_field_element in tree_root:
             namespace = namespace_regex.match(prof_field_element.tag).group()
@@ -195,39 +198,24 @@ class ProfileScanner(QtCore.QThread):
 
             field_type_name = prof_field_element.tag.replace(namespace, '')
 
-            """
-                if prof_field_element.tag != tag:
-                    print('tag: ', prof_field_element.tag)
-                    print('namespace: ', ns)
-                    print('field_type_name: ', prof_field_element.tag.replace(ns,''))
-                print('attribute: ', prof_field_element.attrib)
-            """
+            # TODO: create exception if not found
+            model_class_name = models.classes_by_modelName.get(field_type_name)
 
-            model_class_name = models.classes_by_modelName.get(field_type_name)  # TODO: create exception if not found
             if model_class_name:
+                # Read metadata from xml
                 fields = {}
                 for field_child in prof_field_element:
                     tag = field_child.tag.replace(namespace, '')
                     fields[tag] = field_child.text
+
+                # transfer to model
                 profile_field = model_class_name()
                 profile_field.fields = fields
 
-                toggles, _id = profile_field.toggles, str(profile_field)
+                _id = str(profile_field)
 
-                GlobalVar.Merged.MODEL_FIELDS[_id] = profile_field
-
-                if toggles:
-                    for key, value in toggles.items():
-                        full_property = f'{str(profile_field)} --- {key}'
-                        fields_dict[full_property] = ProfileItem(
-                            id=_id, _property=full_property, item=profile_field,
-                            from_profile=self.from_profile, toggle_value=value, field=key
-                        )
-                else:
-                    fields_dict[_id] = ProfileItem(
-                        id=_id, _property=_id, item=profile_field, from_profile=self.from_profile,
-                        toggle_value=GlobalVar.ITEM_NOTOGGLE, field=key
-                    )
+                GlobalVar.Merged.PROPERTIES[_id] = profile_field
+                fields_dict[_id] = profile_field
 
         # Fill global lists
         if len(fields_dict) > 0:
@@ -237,7 +225,8 @@ class ProfileScanner(QtCore.QThread):
                     GlobalVar.Source.PROPERTIES[key] = value
                 if self.from_profile == GlobalVar.FROM_TARGET:
                     GlobalVar.Target.PROPERTIES[key] = value
-            GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = len(GlobalVar.Source.PROPERTIES) > 0, len(GlobalVar.Target.PROPERTIES) > 0
+            GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
+            GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
 
             self.addItems.emit({
                 'from': self.from_profile,  # with love from
@@ -306,12 +295,10 @@ class MainWindow(QMainWindow):
 
         current_id = None
         for model_item in GlobalVar.Items.merged.values():
+            print(model_item.id)
             if current_id != model_item.id:
                 current_id = model_item.id
                 model_field = model_item.item
-                print(model_field)
-                print(model_field.__dict__)
-                print(model_field.fields)
                 c = ElementTree.SubElement(xml_root, model_field.model_name)
                 for field, value in model_field.fields.items():
                     if value is not None and value != '':
@@ -319,7 +306,7 @@ class MainWindow(QMainWindow):
                             value = str(value).lower()
                         ElementTree.SubElement(c, field).text = value
 
-        xml_str = ElementTree.tostring(xml_root, 'utf-8')   
+        xml_str = ElementTree.tostring(xml_root, 'utf-8')
         reparsed = minidom.parseString(xml_str)
         xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
@@ -362,14 +349,10 @@ class MainWindow(QMainWindow):
         if self.list_target:
             merged_dict = GlobalVar.Merged.PROPERTIES
 
-            # new_items = package['items']
-            # list_from = package['from']
-
             # Fill merged list
             self.ui.list_merged.clear()
             for key in sorted(merged_dict.keys()):
                 value = merged_dict[key]
-                item = value.copy
                 GlobalVar.Items.merged[item.property] = item
                 self.ui.list_merged.addItem(item)
 
