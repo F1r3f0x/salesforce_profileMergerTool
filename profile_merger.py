@@ -15,6 +15,7 @@ import qdarkstyle
 # mine
 from ui.main_window import Ui_MainWindow
 import models
+import utils
 
 # Brushes
 brush_f_normal = QtGui.QBrush(QtGui.QColor(255, 255, 255))
@@ -217,21 +218,18 @@ class ProfileScanner(QtCore.QThread):
                 GlobalVar.Merged.PROPERTIES[_id] = profile_field
                 fields_dict[_id] = profile_field
 
-        # Fill global lists
-        if len(fields_dict) > 0:
-            for key, value in fields_dict.items():
-                GlobalVar.Merged.PROPERTIES[key] = value
                 if self.from_profile == GlobalVar.FROM_SOURCE:
-                    GlobalVar.Source.PROPERTIES[key] = value
+                    GlobalVar.Source.PROPERTIES[_id] = profile_field
                 if self.from_profile == GlobalVar.FROM_TARGET:
-                    GlobalVar.Target.PROPERTIES[key] = value
-            GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
-            GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
+                    GlobalVar.Target.PROPERTIES[_id] = profile_field
 
-            self.addItems.emit({
-                'from': self.from_profile,  # with love from
-                'items': fields_dict
-            })
+        GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
+        GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
+
+        self.addItems.emit({
+            'from': self.from_profile,  # with love from
+            'items': fields_dict
+        })
 
 
 class MainWindow(QMainWindow):
@@ -274,6 +272,7 @@ class MainWindow(QMainWindow):
         if from_profile == GlobalVar.FROM_MERGED:
             merged_item = GlobalVar.Items.merged[id]
             merged_item.item_disabled = not merged_item.item_disabled
+
         else:
             if not row:
                 merged_item = GlobalVar.Items.merged[id]
@@ -352,30 +351,62 @@ class MainWindow(QMainWindow):
             # Fill merged list
             self.ui.list_merged.clear()
             for key in sorted(merged_dict.keys()):
-                value = merged_dict[key]
-                GlobalVar.Items.merged[item.property] = item
-                self.ui.list_merged.addItem(item)
+                model_obj = merged_dict[key]
+                model_name = str(model_obj)
 
+                # TODO: Put item creation in a function
+                if len(model_obj.toggles.keys()) > 0:
+                    for toggle_name, toggle_value in model_obj.toggles.items():
+                        item = item_from_model_field(
+                            model_name, toggle_name, utils.str_to_bool(toggle_value)
+                        )
+                        GlobalVar.Items.merged[item.text()] = item
+                        self.ui.list_merged.addItem(item)
+                else:
+                    item = item_from_model_field(model_name)
+                    GlobalVar.Items.merged[model_name] = item
+                    self.ui.list_merged.addItem(item)
+                
             # Compare to merged and fill
             self.ui.list_source.clear()
             self.ui.list_target.clear()
             for key in sorted(merged_dict.keys()):
-                item_target = GlobalVar.Target.PROPERTIES.get(key)
-                item_source = GlobalVar.Source.PROPERTIES.get(key)
+                model_obj = merged_dict[key]
+                model_name = str(model_obj)
 
-                if item_target:
-                    self.ui.list_target.addItem(item_target.copy)
+                if GlobalVar.Target.PROPERTIES.get(key):
+                    if len(model_obj.toggles.keys()) > 0:
+                        for toggle_name, toggle_value in model_obj.toggles.items():
+                            item = item_from_model_field(
+                                model_name, toggle_name, utils.str_to_bool(toggle_value)
+                            )
+                            GlobalVar.Items.target[item.text()] = item
+                            self.ui.list_target.addItem(item)
+                    else:
+                        item = item_from_model_field(model_name)
+                        GlobalVar.Items.target[item.text()] = item
+                        self.ui.list_target.addItem(item)
                 else:
                     self.ui.list_target.addItem('')
 
-                if item_source:
-                    self.ui.list_source.addItem(item_source.copy)
+                if GlobalVar.Source.PROPERTIES.get(key):
+                    if len(model_obj.toggles.keys()) > 0:
+                        for toggle_name, toggle_value in model_obj.toggles.items():
+                            item = item_from_model_field(
+                                model_name, toggle_name, utils.str_to_bool(toggle_value)
+                            )
+                            GlobalVar.Items.source[item.text()] = item
+                            self.ui.list_source.addItem(item)
+                    else:
+                        item = item_from_model_field(model_name)
+                        GlobalVar.Items.source[item.text()] = item
+                        self.ui.list_source.addItem(item)
                 else:
                     self.ui.list_source.addItem('')
 
             print(f'SOURCE: {self.ui.list_source.count()}')
             print(f'TARGET: {self.ui.list_target.count()}')
-            print(f'MERGED: {self.ui.list_source.count()}')
+            print(f'MERGED: {self.ui.list_merged.count()}')
 
     def syncScroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
@@ -407,6 +438,21 @@ class MainWindow(QMainWindow):
                 self.ui.lbl_target_2.setText(file_name)
 
         return file_path
+
+
+def item_from_model_field(model_name, field=None, value=None) -> QListWidgetItem:
+    item = QListWidgetItem(model_name)
+    item.item_disabled = False
+    if field is not None and value is not None:
+        item.setText(f'{model_name} -- {field}: {value}')
+        item.toggle_value = value
+
+        if value:
+            item.setBackground(brush_b_enabled)
+        else:
+            item.setBackground(brush_b_disabled)
+
+    return item
 
 
 if __name__ == "__main__":
