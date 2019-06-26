@@ -4,7 +4,6 @@ import re
 from xml.etree import ElementTree
 from xml.dom import minidom
 from pprint import pprint
-from copy import deepcopy
 
 # qt
 from PySide2 import QtCore
@@ -16,6 +15,7 @@ import qdarkstyle
 # mine
 from ui.main_window import Ui_MainWindow
 import models
+import utils
 
 # Brushes
 brush_f_normal = QtGui.QBrush(QtGui.QColor(255, 255, 255))
@@ -59,7 +59,6 @@ class GlobalVar:
     class Merged:
         NAMESPACE = None
         PROPERTIES = {}
-        MODEL_FIELDS = {}
 
     class Items:
         source = {}
@@ -67,61 +66,48 @@ class GlobalVar:
         merged = {}
 
 
-class ProfileItem(QListWidgetItem):
-    def __init__(self, id='', _property='', field='', item={}, from_profile='', toggle_value=True):
+class UiProfileItem(QListWidgetItem):
+    def __init__(
+        self, model_ref: models.ProfileFieldType, text, disabled=False,
+        toggle_name=None, toggle_value=None
+    ):
         super().__init__()
-        self.id = id
-        self.property = _property
-        self.setText(_property)
-        self._item_current = deepcopy(item)
-        self.item_field = field
-        self.item_original = item
-        self._item_toggle = toggle_value
-        self._item_disabled = False
-        self.from_profile = from_profile
-        self._refresh_styles()
+        self.id = str(model_ref)
+        self.setText(text)
+        self.model_ref = model_ref
+        self.model_ref.model_disabled = disabled
+        self.toggle_name = toggle_name
+        self.__toggle_value = toggle_value
+        if toggle_name is not None:
+            self.model_ref.toggles[toggle_name] = toggle_value
+
+        self.__refresh_styles()
 
     @property
     def toggle_value(self):
-        return self._item_toggle
+        if self.toggle_name is not None:
+            return self.model_ref.toggles[self.toggle_name]
+        else:
+            return self.__toggle_value
 
     @toggle_value.setter
     def toggle_value(self, value: bool):
-        self._item_toggle = value
-        self._refresh_styles()
+        if self.toggle_name is not None:
+            self.model_ref.toggles[self.toggle_name] = value
+        else:
+            self.__toggle_value = value
+        self.__refresh_styles()
 
     @property
     def item_disabled(self):
-        return self._item_disabled
+        return self.model_ref.model_disabled
 
     @item_disabled.setter
     def item_disabled(self, value):
-        self._item_disabled = value
-        self._refresh_styles()
+        self.model_ref.model_disabled = value
+        self.__refresh_styles()
 
-    @property
-    def item(self):
-        return self._item_current
-
-    @item.setter
-    def item(self, value):
-        self._item_current = value
-
-    @property
-    def copy(self):
-        return ProfileItem(
-            id=self.id,
-            _property=self.property,
-            field=self.item_field,
-            item=self.item,
-            from_profile=self.from_profile,
-            toggle_value=self.toggle_value
-        )
-
-    def compare_field_type(self, other):
-        return self.id == other.id
-
-    def _refresh_styles(self):
+    def __refresh_styles(self):
         if self.toggle_value != GlobalVar.ITEM_NOTOGGLE:
             if self.toggle_value:
                 self.setBackground(brush_b_enabled)
@@ -136,13 +122,8 @@ class ProfileItem(QListWidgetItem):
             if self.toggle_value == GlobalVar.ITEM_NOTOGGLE:
                 self.setBackground(brush_b_normal)
 
-    def __eq__(self, other):
-        if other is None:
-            return self.id is None
-        return self.id == other.id and self.property == other.property
-
     def __str__(self):
-        return f'<ProfileItem: {self.property}>'
+        return f'<UiProfileItem: {self.text()}>'
 
 
 class ProfileScanner(QtCore.QThread):
@@ -157,10 +138,14 @@ class ProfileScanner(QtCore.QThread):
     # Overloaded, is run by calling its start() function
     def run(self):
         # Reset tables
-        if GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and len(GlobalVar.Merged.PROPERTIES) > 0:
+        if (GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and
+                len(GlobalVar.Merged.PROPERTIES) > 0):
             GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = False, False
 
-            properties_rescan = GlobalVar.Target.PROPERTIES if self.from_profile == GlobalVar.FROM_SOURCE else GlobalVar.Source.PROPERTIES
+            if self.from_profile == GlobalVar.FROM_SOURCE:
+                properties_rescan = GlobalVar.Target.PROPERTIES
+            else:
+                properties_rescan = GlobalVar.Source.PROPERTIES
 
             GlobalVar.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
@@ -180,7 +165,6 @@ class ProfileScanner(QtCore.QThread):
         namespace_regex = re.compile(namespace_pattern)
 
         tag, fields_dict = '', {}
-
         # Create ProfileItems with the profile
         for prof_field_element in tree_root:
             namespace = namespace_regex.match(prof_field_element.tag).group()
@@ -195,54 +179,37 @@ class ProfileScanner(QtCore.QThread):
 
             field_type_name = prof_field_element.tag.replace(namespace, '')
 
-            """
-                if prof_field_element.tag != tag:
-                    print('tag: ', prof_field_element.tag)
-                    print('namespace: ', ns)
-                    print('field_type_name: ', prof_field_element.tag.replace(ns,''))
-                print('attribute: ', prof_field_element.attrib)
-            """
+            # TODO: create exception if not found
+            model_class_name = models.classes_by_modelName.get(field_type_name)
 
-            model_class_name = models.classes_by_modelName.get(field_type_name)  # TODO: create exception if not found
             if model_class_name:
+                # Read metadata from xml
                 fields = {}
                 for field_child in prof_field_element:
                     tag = field_child.tag.replace(namespace, '')
                     fields[tag] = field_child.text
+
+                # transfer to model
                 profile_field = model_class_name()
                 profile_field.fields = fields
 
-                toggles, _id = profile_field.toggles, str(profile_field)
+                _id = str(profile_field)
 
-                GlobalVar.Merged.MODEL_FIELDS[_id] = profile_field
+                GlobalVar.Merged.PROPERTIES[_id] = profile_field
+                fields_dict[_id] = profile_field
 
-                if toggles:
-                    for key, value in toggles.items():
-                        full_property = f'{str(profile_field)} --- {key}'
-                        fields_dict[full_property] = ProfileItem(
-                            id=_id, _property=full_property, item=profile_field,
-                            from_profile=self.from_profile, toggle_value=value, field=key
-                        )
-                else:
-                    fields_dict[_id] = ProfileItem(
-                        id=_id, _property=_id, item=profile_field, from_profile=self.from_profile,
-                        toggle_value=GlobalVar.ITEM_NOTOGGLE, field=key
-                    )
-
-        # Fill global lists
-        if len(fields_dict) > 0:
-            for key, value in fields_dict.items():
-                GlobalVar.Merged.PROPERTIES[key] = value
                 if self.from_profile == GlobalVar.FROM_SOURCE:
-                    GlobalVar.Source.PROPERTIES[key] = value
+                    GlobalVar.Source.PROPERTIES[_id] = profile_field
                 if self.from_profile == GlobalVar.FROM_TARGET:
-                    GlobalVar.Target.PROPERTIES[key] = value
-            GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = len(GlobalVar.Source.PROPERTIES) > 0, len(GlobalVar.Target.PROPERTIES) > 0
+                    GlobalVar.Target.PROPERTIES[_id] = profile_field
 
-            self.addItems.emit({
-                'from': self.from_profile,  # with love from
-                'items': fields_dict
-            })
+        GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
+        GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
+
+        self.addItems.emit({
+            'from': self.from_profile,  # with love from
+            'items': fields_dict
+        })
 
 
 class MainWindow(QMainWindow):
@@ -268,9 +235,9 @@ class MainWindow(QMainWindow):
         )
 
         self.lastItem = None
-        self.ui.list_source.itemClicked.connect(self.sourceDblClicked)
-        self.ui.list_target.itemClicked.connect(self.targetDblClicked)
-        self.ui.list_merged.itemClicked.connect(self.mergedDblClicked)
+        self.ui.list_source.itemClicked.connect(self.item_clicked)
+        self.ui.list_target.itemClicked.connect(self.item_clicked)
+        self.ui.list_merged.itemClicked.connect(self.merged_item_clicked)
 
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
@@ -281,45 +248,18 @@ class MainWindow(QMainWindow):
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
 
-    def toggleItem(self, id: str, from_profile: str, row=None):
-        if from_profile == GlobalVar.FROM_MERGED:
-            merged_item = GlobalVar.Items.merged[id]
-            merged_item.item_disabled = not merged_item.item_disabled
-        else:
-            if not row:
-                merged_item = GlobalVar.Items.merged[id]
-                merged_item.item_disabled = False
-
-                if from_profile == GlobalVar.FROM_SOURCE:
-                    source_item = GlobalVar.Source.PROPERTIES[id]
-                    merged_item.toggle_value = source_item.toggle_value
-                if from_profile == GlobalVar.FROM_TARGET:
-                    target_item = GlobalVar.Target.PROPERTIES[id]
-                    merged_item.toggle_value = target_item.toggle_value
-
-            else:
-                item = self.ui.list_merged.item(row)
-                item.item_disabled = not item.item_disabled
-
     def startBtnClicked(self):
         xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
 
-        current_id = None
-        for model_item in GlobalVar.Items.merged.values():
-            if current_id != model_item.id:
-                current_id = model_item.id
-                model_field = model_item.item
-                print(model_field)
-                print(model_field.__dict__)
-                print(model_field.fields)
+        for model_field in GlobalVar.Merged.PROPERTIES.values():
+            if not model_field.model_disabled:
                 c = ElementTree.SubElement(xml_root, model_field.model_name)
                 for field, value in model_field.fields.items():
                     if value is not None and value != '':
                         if type(value) is bool:
                             value = str(value).lower()
                         ElementTree.SubElement(c, field).text = value
-
-        xml_str = ElementTree.tostring(xml_root, 'utf-8')   
+        xml_str = ElementTree.tostring(xml_root, 'utf-8')
         reparsed = minidom.parseString(xml_str)
         xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
@@ -336,63 +276,86 @@ class MainWindow(QMainWindow):
 
             msgbox = QMessageBox()
             msgbox.setWindowTitle('Merging Results')
-            msgbox.setText('DONE!')
+            msgbox.setText('DONE!\t\t\t\t')
             msgbox.exec_()
 
-    def sourceDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_SOURCE)
-        else:
-            self.toggleItem('', GlobalVar.FROM_SOURCE, row=self.ui.list_source.row(value))
-        value.setSelected(False)
+    def item_clicked(self, item_clicked: QListWidgetItem):
+        if type(item_clicked) is UiProfileItem:
+            row = None
+            if item_clicked.listWidget() is self.ui.list_source:
+                row = self.ui.list_source.row(item_clicked)
+            elif item_clicked.listWidget() is self.ui.list_target:
+                row = self.ui.list_target.row(item_clicked)
+            else:
+                # what in the fuck are you doing here
+                return
 
-    def targetDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_TARGET)
-        else:
-            self.toggleItem('', GlobalVar.FROM_TARGET, row=self.ui.list_target.row(value))
-        value.setSelected(False)
+            merged_item = self.ui.list_merged.item(row)
+            merged_item.item_disabled = False
+            if hasattr(item_clicked, 'toggle_value'):
+                merged_item.toggle_value = item_clicked.toggle_value
+            else:
+                merged_item.item_disabled = True
 
-    def mergedDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_MERGED)
-        value.setSelected(False)
+            item_clicked.setSelected(False)
+
+    def merged_item_clicked(self, item_clicked: QListWidgetItem):
+        disabled = item_clicked.item_disabled
+        if hasattr(item_clicked, 'item_disabled'):
+            merged = GlobalVar.Items.merged[item_clicked.id]
+            if type(merged) is list:
+                for item in merged:
+                    item.item_disabled = not disabled
+            else:
+                item_clicked.item_disabled = not disabled
+        item_clicked.setSelected(False)
 
     def addItems(self, package: dict):
         if self.list_target:
             merged_dict = GlobalVar.Merged.PROPERTIES
 
-            # new_items = package['items']
-            # list_from = package['from']
-
             # Fill merged list
             self.ui.list_merged.clear()
-            for key in sorted(merged_dict.keys()):
-                value = merged_dict[key]
-                item = value.copy
-                GlobalVar.Items.merged[item.property] = item
-                self.ui.list_merged.addItem(item)
-
-            # Compare to merged and fill
             self.ui.list_source.clear()
             self.ui.list_target.clear()
             for key in sorted(merged_dict.keys()):
-                item_target = GlobalVar.Target.PROPERTIES.get(key)
-                item_source = GlobalVar.Source.PROPERTIES.get(key)
+                model_obj = merged_dict[key]
+                model_name = str(model_obj)
 
-                if item_target:
-                    self.ui.list_target.addItem(item_target.copy)
+                if len(model_obj.toggles.keys()) > 0:
+                    item_group = []
+                    for toggle_name, toggle_value in model_obj.toggles.items():
+                        toggle_value = utils.str_to_bool(toggle_value)
+                        item = MainWindow.item_from_model_field(
+                            model_obj, model_name, toggle_name, toggle_value
+                        )
+                        item_group.append(item)
+                        MainWindow.replicate_item(
+                            GlobalVar.Target.PROPERTIES, self.ui.list_target, key, model_name,
+                            toggle_name
+                        )
+                        MainWindow.replicate_item(
+                            GlobalVar.Source.PROPERTIES, self.ui.list_source, key, model_name,
+                            toggle_name
+                        )
+                    GlobalVar.Items.merged[model_name] = item_group
+                    for item in item_group:
+                        self.ui.list_merged.addItem(item)
                 else:
-                    self.ui.list_target.addItem('')
+                    item = MainWindow.item_from_model_field(model_obj, model_name)
+                    GlobalVar.Items.merged[model_name] = item
+                    self.ui.list_merged.addItem(item)
 
-                if item_source:
-                    self.ui.list_source.addItem(item_source.copy)
-                else:
-                    self.ui.list_source.addItem('')
+                    MainWindow.replicate_item(
+                        GlobalVar.Target.PROPERTIES, self.ui.list_target, key, model_name
+                    )
+                    MainWindow.replicate_item(
+                        GlobalVar.Source.PROPERTIES, self.ui.list_source, key, model_name
+                    )
 
             print(f'SOURCE: {self.ui.list_source.count()}')
             print(f'TARGET: {self.ui.list_target.count()}')
-            print(f'MERGED: {self.ui.list_source.count()}')
+            print(f'MERGED: {self.ui.list_merged.count()}')
 
     def syncScroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
@@ -424,6 +387,56 @@ class MainWindow(QMainWindow):
                 self.ui.lbl_target_2.setText(file_name)
 
         return file_path
+
+    def item_set_styles(item):
+        if item.toggle_value != GlobalVar.ITEM_NOTOGGLE:
+            if item.toggle_value:
+                item.setBackground(brush_b_enabled)
+            else:
+                item.setBackground(brush_b_disabled)
+
+        if item.item_disabled:
+            item.setBackground(brush_b_removed)
+            item.setForeground(brush_f_removed)
+        else:
+            item.setForeground(brush_f_normal)
+            if item.toggle_value == GlobalVar.ITEM_NOTOGGLE:
+                item.setBackground(brush_b_normal)
+
+    def item_from_model_field(model_ref, model_name, field=None, value=None) -> QListWidgetItem:
+        item = UiProfileItem(model_ref, model_name)
+        item.item_disabled = False
+        item.toggle_value = GlobalVar.ITEM_NOTOGGLE
+
+        if field is not None and value is not None:
+            item.setText(f'{model_name} -- {field}: {value}')
+            item.toggle_value = value
+
+            if value:
+                item.setBackground(brush_b_enabled)
+            else:
+                item.setBackground(brush_b_disabled)
+
+        return item
+
+    def replicate_item(global_dict, ui_list, key, model_name, toggle_name=None):
+        if global_dict.get(key):
+            model_obj = global_dict[key]
+            if (toggle_name is not None):
+                # Get the value from the item, not the merged list
+                toggle_value = model_obj.toggles[toggle_name]
+
+                item = MainWindow.item_from_model_field(
+                    model_obj, model_name, toggle_name, toggle_value
+                )
+            else:
+                item = MainWindow.item_from_model_field(model_obj, model_name)
+
+            # global_dict[item.text()] = item
+
+            ui_list.addItem(item)
+        else:
+            ui_list.addItem('')
 
 
 if __name__ == "__main__":

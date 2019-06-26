@@ -11,7 +11,7 @@ Copyright: Patricio Labin Correa - 2019
 """
 
 from typing import List
-from utils import bool_to_str
+from utils import str_to_bool
 
 DEFAULT_API_VERSION = 44
 
@@ -33,6 +33,7 @@ class ProfileFieldType:
         self.model_name = ''
         self.model_fields = {}
         self.model_toggles = {}
+        self.model_disabled = False
 
     def _set_fields(self, input_fields: dict):
         if input_fields:
@@ -105,7 +106,7 @@ class ProfileApplicationVisibility(ProfileFieldType):
 
     @default.setter
     def default(self, value):
-        self.__default = bool_to_str(value)
+        self.__default = str_to_bool(value)
 
     @property
     def visible(self):
@@ -113,7 +114,7 @@ class ProfileApplicationVisibility(ProfileFieldType):
 
     @visible.setter
     def visible(self, value):
-        self.__visible = bool_to_str(value)
+        self.__visible = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -156,7 +157,7 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
     @visibility.setter
     def visibility(self, value):
-        self.__visibility = bool_to_str(value)
+        self.__visibility = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -194,7 +195,7 @@ class ProfileApexClassAccess(ProfileFieldType):
 
     @enabled.setter
     def enabled(self, value):
-        self.__enabled = bool_to_str(value)
+        self.__enabled = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -231,7 +232,7 @@ class ProfileCustomPermissions(ProfileFieldType):
 
     @enabled.setter
     def enabled(self, value):
-        self.__enabled = bool_to_str(value)
+        self.__enabled = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -268,7 +269,7 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
 
     @enabled.setter
     def enabled(self, value):
-        self.__enabled = bool_to_str(value)
+        self.__enabled = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -310,7 +311,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @editable.setter
     def editable(self, value):
-        self.__editable = bool_to_str(value)
+        self.__editable = str_to_bool(value)
 
     @property
     def hidden(self):
@@ -318,7 +319,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @hidden.setter
     def hidden(self, value):
-        self.__hidden = bool_to_str(value)
+        self.__hidden = str_to_bool(value)
 
     @property
     def readable(self):
@@ -326,7 +327,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @readable.setter
     def readable(self, value):
-        self.__readable = bool_to_str(value)
+        self.__readable = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -459,7 +460,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @allowCreate.setter
     def allowCreate(self, value):
-        self.__allowCreate = bool_to_str(value)
+        self.__allowCreate = str_to_bool(value)
 
     @property
     def allowDelete(self):
@@ -467,7 +468,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @allowDelete.setter
     def allowDelete(self, value):
-        self.__allowDelete = bool_to_str(value)
+        self.__allowDelete = str_to_bool(value)
 
     @property
     def allowEdit(self):
@@ -475,7 +476,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @allowEdit.setter
     def allowEdit(self, value):
-        self.__allowEdit = bool_to_str(value)
+        self.__allowEdit = str_to_bool(value)
 
     @property
     def allowRead(self):
@@ -483,7 +484,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @allowRead.setter
     def allowRead(self, value):
-        self.__allowRead = bool_to_str(value)
+        self.__allowRead = str_to_bool(value)
 
     @property
     def modifyAllRecords(self):
@@ -491,7 +492,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @modifyAllRecords.setter
     def modifyAllRecords(self, value):
-        self.__modifyAllRecords = bool_to_str(value)
+        self.__modifyAllRecords = str_to_bool(value)
 
     @property
     def viewAllRecords(self):
@@ -499,7 +500,7 @@ class ProfileObjectPermissions(ProfileFieldType):
 
     @viewAllRecords.setter
     def viewAllRecords(self, value):
-        self.__viewAllRecords = bool_to_str(value)
+        self.__viewAllRecords = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -576,7 +577,7 @@ class ProfileApexPageAccess(ProfileFieldType):
 
     @enabled.setter
     def enabled(self, value):
-        self.__enabled = bool_to_str(value)
+        self.__enabled = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -587,7 +588,7 @@ class ProfileApexPageAccess(ProfileFieldType):
     @property
     def fields(self):
         return {
-            'apexClass': self.apexPage,
+            'apexPage': self.apexPage,
             'enabled': self.enabled
         }
 
@@ -615,7 +616,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
     @default.setter
     def default(self, value):
-        self.__default = bool_to_str(value)
+        self.__default = str_to_bool(value)
 
     @property
     def personAccountDefault(self):
@@ -623,7 +624,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
     @personAccountDefault.setter
     def personAccountDefault(self, value):
-        self.__personAccountDefault = bool_to_str(value)
+        self.__personAccountDefault = str_to_bool(value)
 
     @property
     def visible(self):
@@ -631,7 +632,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
     @visible.setter
     def visible(self, value):
-        self.__visible = bool_to_str(value)
+        self.__visible = str_to_bool(value)
 
     @property
     def toggles(self):
@@ -695,7 +696,7 @@ class ProfileUserPermission(ProfileFieldType):
 
     @enabled.setter
     def enabled(self, value):
-        self.__enabled = bool_to_str(value)
+        self.__enabled = str_to_bool(value)
 
     @property
     def toggles(self):
