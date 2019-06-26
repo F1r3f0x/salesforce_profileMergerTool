@@ -255,9 +255,9 @@ class MainWindow(QMainWindow):
         )
 
         self.lastItem = None
-        self.ui.list_source.itemClicked.connect(self.sourceDblClicked)
-        self.ui.list_target.itemClicked.connect(self.targetDblClicked)
-        self.ui.list_merged.itemClicked.connect(self.mergedDblClicked)
+        self.ui.list_source.itemClicked.connect(self.item_clicked)
+        self.ui.list_target.itemClicked.connect(self.item_clicked)
+        self.ui.list_merged.itemClicked.connect(self.merged_item_clicked)
 
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
@@ -267,27 +267,6 @@ class MainWindow(QMainWindow):
 
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
-
-    def toggleItem(self, id: str, from_profile: str, row=None):
-        if from_profile == GlobalVar.FROM_MERGED:
-            merged_item = GlobalVar.Items.merged[id]
-            merged_item.item_disabled = not merged_item.item_disabled
-
-        else:
-            if not row:
-                merged_item = GlobalVar.Items.merged[id]
-                merged_item.item_disabled = False
-
-                if from_profile == GlobalVar.FROM_SOURCE:
-                    source_item = GlobalVar.Source.PROPERTIES[id]
-                    merged_item.toggle_value = source_item.toggle_value
-                if from_profile == GlobalVar.FROM_TARGET:
-                    target_item = GlobalVar.Target.PROPERTIES[id]
-                    merged_item.toggle_value = target_item.toggle_value
-
-            else:
-                item = self.ui.list_merged.item(row)
-                item.item_disabled = not item.item_disabled
 
     def startBtnClicked(self):
         xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
@@ -325,27 +304,36 @@ class MainWindow(QMainWindow):
             msgbox.setText('DONE!')
             msgbox.exec_()
 
-    def sourceDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_SOURCE)
+    def item_clicked(self, item_clicked: QListWidgetItem):
+        row = None
+        if item_clicked.listWidget() is self.ui.list_source:
+            row = self.ui.list_source.row(item_clicked)
+        elif item_clicked.listWidget() is self.ui.list_target:
+            row = self.ui.list_target.row(item_clicked)
         else:
-            self.toggleItem('', GlobalVar.FROM_SOURCE, row=self.ui.list_source.row(value))
-        value.setSelected(False)
+            # what in the fuck are you doing here
+            return
 
-    def targetDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_TARGET)
+        merged_item = self.ui.list_merged.item(row)
+
+        merged_item.item_disabled = False
+        if hasattr(item_clicked, 'toggle_value'):
+            merged_item.toggle_value = item_clicked.toggle_value
         else:
-            self.toggleItem('', GlobalVar.FROM_TARGET, row=self.ui.list_target.row(value))
-        value.setSelected(False)
+            merged_item.item_disabled = True
 
-    def mergedDblClicked(self, value: QListWidgetItem):
-        if hasattr(value, 'property'):
-            self.toggleItem(value.property, GlobalVar.FROM_MERGED)
-        value.setSelected(False)
+        MainWindow.item_set_styles(merged_item)
+        item_clicked.setSelected(False)
+
+    def merged_item_clicked(self, item_clicked: QListWidgetItem):
+        if hasattr(item_clicked, 'item_disabled'):
+            item_clicked.item_disabled = not item_clicked.item_disabled
+            MainWindow.item_set_styles(item_clicked)
+        item_clicked.setSelected(False)
 
     def addItems(self, package: dict):
         if self.list_target:
+            print(self.list_target)
             merged_dict = GlobalVar.Merged.PROPERTIES
 
             # Fill merged list
@@ -359,6 +347,7 @@ class MainWindow(QMainWindow):
                 if len(model_obj.toggles.keys()) > 0:
                     for toggle_name, toggle_value in model_obj.toggles.items():
                         toggle_value = utils.str_to_bool(toggle_value)
+                        print(model_name, toggle_name, toggle_value)
                         item = MainWindow.item_from_model_field(
                             model_name, toggle_name, toggle_value
                         )
@@ -371,7 +360,6 @@ class MainWindow(QMainWindow):
                             key,
                             model_name,
                             toggle_name,
-                            toggle_value
                         )
                         MainWindow.replicate_item(
                             GlobalVar.Source.PROPERTIES,
@@ -379,7 +367,6 @@ class MainWindow(QMainWindow):
                             key,
                             model_name,
                             toggle_name,
-                            toggle_value
                         )
                 else:
                     item = MainWindow.item_from_model_field(model_name)
@@ -434,9 +421,26 @@ class MainWindow(QMainWindow):
 
         return file_path
 
+    def item_set_styles(item):
+        if item.toggle_value != GlobalVar.ITEM_NOTOGGLE:
+            if item.toggle_value:
+                item.setBackground(brush_b_enabled)
+            else:
+                item.setBackground(brush_b_disabled)
+
+        if item.item_disabled:
+            item.setBackground(brush_b_removed)
+            item.setForeground(brush_f_removed)
+        else:
+            item.setForeground(brush_f_normal)
+            if item.toggle_value == GlobalVar.ITEM_NOTOGGLE:
+                item.setBackground(brush_b_normal)
+
     def item_from_model_field(model_name, field=None, value=None) -> QListWidgetItem:
         item = QListWidgetItem(model_name)
         item.item_disabled = False
+        item.toggle_value = GlobalVar.ITEM_NOTOGGLE
+
         if field is not None and value is not None:
             item.setText(f'{model_name} -- {field}: {value}')
             item.toggle_value = value
@@ -448,9 +452,13 @@ class MainWindow(QMainWindow):
 
         return item
 
-    def replicate_item(global_dict, ui_list, key, model_name, toggle_name=None, toggle_value=None):
+    def replicate_item(global_dict, ui_list, key, model_name, toggle_name=None):
         if global_dict.get(key):
-            if (toggle_name is not None and toggle_value is not None):
+            if (toggle_name is not None):
+                
+                # Get the value from the item, not the merged list
+                toggle_value = global_dict[key].toggles[toggle_name]
+
                 item = MainWindow.item_from_model_field(model_name, toggle_name, toggle_value)
             else:
                 item = MainWindow.item_from_model_field(model_name)
