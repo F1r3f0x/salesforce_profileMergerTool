@@ -33,6 +33,7 @@ class ProfileFieldType:
         self.model_name = ''
         self.model_fields = {}
         self.model_toggles = {}
+        self.model_disabled = False
 
     def _set_fields(self, input_fields: dict):
         if input_fields:
@@ -587,7 +588,7 @@ class ProfileApexPageAccess(ProfileFieldType):
     @property
     def fields(self):
         return {
-            'apexClass': self.apexPage,
+            'apexPage': self.apexPage,
             'enabled': self.enabled
         }
 
