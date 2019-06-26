@@ -350,59 +350,54 @@ class MainWindow(QMainWindow):
 
             # Fill merged list
             self.ui.list_merged.clear()
-            for key in sorted(merged_dict.keys()):
-                model_obj = merged_dict[key]
-                model_name = str(model_obj)
-
-                # TODO: Put item creation in a function
-                if len(model_obj.toggles.keys()) > 0:
-                    for toggle_name, toggle_value in model_obj.toggles.items():
-                        item = item_from_model_field(
-                            model_name, toggle_name, utils.str_to_bool(toggle_value)
-                        )
-                        GlobalVar.Items.merged[item.text()] = item
-                        self.ui.list_merged.addItem(item)
-                else:
-                    item = item_from_model_field(model_name)
-                    GlobalVar.Items.merged[model_name] = item
-                    self.ui.list_merged.addItem(item)
-                
-            # Compare to merged and fill
             self.ui.list_source.clear()
             self.ui.list_target.clear()
             for key in sorted(merged_dict.keys()):
                 model_obj = merged_dict[key]
                 model_name = str(model_obj)
 
-                if GlobalVar.Target.PROPERTIES.get(key):
-                    if len(model_obj.toggles.keys()) > 0:
-                        for toggle_name, toggle_value in model_obj.toggles.items():
-                            item = item_from_model_field(
-                                model_name, toggle_name, utils.str_to_bool(toggle_value)
-                            )
-                            GlobalVar.Items.target[item.text()] = item
-                            self.ui.list_target.addItem(item)
-                    else:
-                        item = item_from_model_field(model_name)
-                        GlobalVar.Items.target[item.text()] = item
-                        self.ui.list_target.addItem(item)
-                else:
-                    self.ui.list_target.addItem('')
+                if len(model_obj.toggles.keys()) > 0:
+                    for toggle_name, toggle_value in model_obj.toggles.items():
+                        toggle_value = utils.str_to_bool(toggle_value)
+                        item = MainWindow.item_from_model_field(
+                            model_name, toggle_name, toggle_value
+                        )
+                        GlobalVar.Items.merged[item.text()] = item
+                        self.ui.list_merged.addItem(item)
 
-                if GlobalVar.Source.PROPERTIES.get(key):
-                    if len(model_obj.toggles.keys()) > 0:
-                        for toggle_name, toggle_value in model_obj.toggles.items():
-                            item = item_from_model_field(
-                                model_name, toggle_name, utils.str_to_bool(toggle_value)
-                            )
-                            GlobalVar.Items.source[item.text()] = item
-                            self.ui.list_source.addItem(item)
-                    else:
-                        item = item_from_model_field(model_name)
-                        GlobalVar.Items.source[item.text()] = item
-                        self.ui.list_source.addItem(item)
+                        MainWindow.replicate_item(
+                            GlobalVar.Target.PROPERTIES,
+                            self.ui.list_target,
+                            key,
+                            model_name,
+                            toggle_name,
+                            toggle_value
+                        )
+                        MainWindow.replicate_item(
+                            GlobalVar.Source.PROPERTIES,
+                            self.ui.list_source,
+                            key,
+                            model_name,
+                            toggle_name,
+                            toggle_value
+                        )
                 else:
-                    self.ui.list_source.addItem('')
+                    item = MainWindow.item_from_model_field(model_name)
+                    GlobalVar.Items.merged[model_name] = item
+                    self.ui.list_merged.addItem(item)
+
+                    MainWindow.replicate_item(
+                        GlobalVar.Target.PROPERTIES,
+                        self.ui.list_target,
+                        key,
+                        model_name
+                    )
+                    MainWindow.replicate_item(
+                        GlobalVar.Source.PROPERTIES,
+                        self.ui.list_source,
+                        key,
+                        model_name
+                    )
 
             print(f'SOURCE: {self.ui.list_source.count()}')
             print(f'TARGET: {self.ui.list_target.count()}')
@@ -439,20 +434,30 @@ class MainWindow(QMainWindow):
 
         return file_path
 
+    def item_from_model_field(model_name, field=None, value=None) -> QListWidgetItem:
+        item = QListWidgetItem(model_name)
+        item.item_disabled = False
+        if field is not None and value is not None:
+            item.setText(f'{model_name} -- {field}: {value}')
+            item.toggle_value = value
 
-def item_from_model_field(model_name, field=None, value=None) -> QListWidgetItem:
-    item = QListWidgetItem(model_name)
-    item.item_disabled = False
-    if field is not None and value is not None:
-        item.setText(f'{model_name} -- {field}: {value}')
-        item.toggle_value = value
+            if value:
+                item.setBackground(brush_b_enabled)
+            else:
+                item.setBackground(brush_b_disabled)
 
-        if value:
-            item.setBackground(brush_b_enabled)
+        return item
+
+    def replicate_item(global_dict, ui_list, key, model_name, toggle_name=None, toggle_value=None):
+        if global_dict.get(key):
+            if (toggle_name is not None and toggle_value is not None):
+                item = MainWindow.item_from_model_field(model_name, toggle_name, toggle_value)
+            else:
+                item = MainWindow.item_from_model_field(model_name)
+            global_dict[item.text()] = item
+            ui_list.addItem(item)
         else:
-            item.setBackground(brush_b_disabled)
-
-    return item
+            ui_list.addItem('')
 
 
 if __name__ == "__main__":
