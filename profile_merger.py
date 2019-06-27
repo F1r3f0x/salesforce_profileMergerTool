@@ -221,8 +221,6 @@ class ProfileScanner(QtCore.QThread):
 
                 _id = str(profile_field)
 
-                pprint(profile_field.__dict__)
-
                 GlobalVar.Merged.PROPERTIES[_id] = profile_field
                 fields_dict[_id] = profile_field
 
