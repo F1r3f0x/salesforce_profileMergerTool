@@ -87,7 +87,6 @@ class UiProfileItem(QListWidgetItem):
         return self.__item_label
 
     def refresh_item_label(self):
-        print(self.id, self.toggle_name)
         if self.toggle_name is not None:
             self.__item_label = f'{self.id} -- {self.toggle_name}: {self.toggle_value}'
         elif type(self.model_ref) is models.ProfileSingleValue:
@@ -106,6 +105,8 @@ class UiProfileItem(QListWidgetItem):
     def toggle_value(self, value: bool):
         if self.toggle_name is not None:
             self.model_ref.toggles[self.toggle_name] = value
+        elif type(self.model_ref) is models.ProfileSingleValue:
+            self.model_ref.value = value
         
         self.__toggle_value = value
 
@@ -220,6 +221,8 @@ class ProfileScanner(QtCore.QThread):
 
                 _id = str(profile_field)
 
+                pprint(profile_field.__dict__)
+
                 GlobalVar.Merged.PROPERTIES[_id] = profile_field
                 fields_dict[_id] = profile_field
 
@@ -274,20 +277,6 @@ class MainWindow(QMainWindow):
         self.scanner_worker.addItems.connect(self.addItems)
 
     def startBtnClicked(self):
-        xml_root = ElementTree.Element('Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'})
-
-        for model_field in GlobalVar.Merged.PROPERTIES.values():
-            if not model_field.model_disabled:
-                c = ElementTree.SubElement(xml_root, model_field.model_name)
-                for field, value in model_field.fields.items():
-                    if value is not None and value != '':
-                        if type(value) is bool:
-                            value = str(value).lower()
-                        ElementTree.SubElement(c, field).text = value
-        xml_str = ElementTree.tostring(xml_root, 'utf-8')
-        reparsed = minidom.parseString(xml_str)
-        xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
-
         file_path, _filter = QFileDialog.getSaveFileName(
             self,
             'Save your Profile file',
@@ -296,6 +285,33 @@ class MainWindow(QMainWindow):
         )
 
         if file_path != '':
+            xml_root = ElementTree.Element(
+                'Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'}
+            )
+
+            for model_field in GlobalVar.Merged.PROPERTIES.values():
+                if not model_field.model_disabled:
+                    if type(model_field) is not models.ProfileSingleValue:
+                        c = ElementTree.SubElement(xml_root, model_field.model_name)
+                        if model_field.fields:
+                            for field, value in model_field.fields.items():
+                                if value is not None and value != '':
+                                    if type(value) is bool:
+                                        value = str(value).lower()
+                                    ElementTree.SubElement(c, field).text = value
+                    else:
+                        field = model_field.model_name
+                        value = model_field.value
+                        if value is not None and value != '':
+                            if type(value) is bool:
+                                value = str(value).lower()
+                            c = ElementTree.SubElement(xml_root, model_field.model_name)
+                            c.text = value
+
+            xml_str = ElementTree.tostring(xml_root, 'utf-8')
+            reparsed = minidom.parseString(xml_str)
+            xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
+
             with open(file_path, 'w', encoding='utf-8') as file_pointer:
                 file_pointer.write(xml_str)
 
@@ -316,8 +332,6 @@ class MainWindow(QMainWindow):
                 return
 
             merged_item = self.ui.list_merged.item(row)
-            print(merged_item.__dict__)
-            print(item_clicked.__dict__)
             merged_item.item_disabled = False
             if hasattr(item_clicked, 'toggle_value'):
                 merged_item.toggle_value = item_clicked.toggle_value
@@ -349,30 +363,41 @@ class MainWindow(QMainWindow):
                 model_obj = merged_dict[key]
                 model_name = str(model_obj)
 
-                no_toggles = True
                 if type(model_obj) is not models.ProfileSingleValue:
                     if len(model_obj.toggles.keys()) > 0:
-                        no_toggles = False
                         item_group = []
                         for toggle_name, toggle_value in model_obj.toggles.items():
-                            toggle_value = utils.str_to_bool(toggle_value)
-                            item = UiProfileItem(
-                                model_obj, toggle_name=toggle_name, toggle_value=toggle_value
-                            )
-                            item_group.append(item)
-                            MainWindow.replicate_item(
-                                GlobalVar.Target.PROPERTIES, self.ui.list_target, key,
-                                toggle_name
-                            )
-                            MainWindow.replicate_item(
-                                GlobalVar.Source.PROPERTIES, self.ui.list_source, key,
-                                toggle_name
-                            )
+                            if toggle_value is not None:
+                                toggle_value = utils.str_to_bool(toggle_value)
+                                item = UiProfileItem(
+                                    model_obj, toggle_name=toggle_name, toggle_value=toggle_value
+                                )
+                                item_group.append(item)
+                                MainWindow.replicate_item(
+                                    GlobalVar.Target.PROPERTIES, self.ui.list_target, key,
+                                    toggle_name
+                                )
+                                MainWindow.replicate_item(
+                                    GlobalVar.Source.PROPERTIES, self.ui.list_source, key,
+                                    toggle_name
+                                )
                         GlobalVar.Items.merged[model_name] = item_group
                         for item in item_group:
                             self.ui.list_merged.addItem(item)
-                if no_toggles:
-                    item = UiProfileItem(model_obj)
+                    else:
+                        item = UiProfileItem(model_obj)
+                        GlobalVar.Items.merged[model_name] = item
+                        self.ui.list_merged.addItem(item)
+
+                        MainWindow.replicate_item(
+                            GlobalVar.Target.PROPERTIES, self.ui.list_target, key
+                        )
+                        MainWindow.replicate_item(
+                            GlobalVar.Source.PROPERTIES, self.ui.list_source, key
+                        )
+                else:
+                    item = UiProfileItem(model_obj, toggle_value=model_obj.value)
+                    
                     GlobalVar.Items.merged[model_name] = item
                     self.ui.list_merged.addItem(item)
 
@@ -428,6 +453,11 @@ class MainWindow(QMainWindow):
                 item = UiProfileItem(
                     model_obj, toggle_name=toggle_name, toggle_value=toggle_value
                 )
+            elif type(model_obj) is models.ProfileSingleValue and type(model_obj.value) is bool:
+                item = UiProfileItem(
+                    model_obj, toggle_value=model_obj.value
+                )
+
             else:
                 item = UiProfileItem(model_obj)
 

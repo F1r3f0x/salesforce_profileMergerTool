@@ -601,7 +601,10 @@ class ProfileApexPageAccess(ProfileFieldType):
 
 
 class ProfileRecordTypeVisibility(ProfileFieldType):
-    def __init__(self, default=True, personAccountDefault=True, recordType='', visible=True, api_version=DEFAULT_API_VERSION):
+    def __init__(
+        self, default=True, personAccountDefault=None, recordType='', visible=True,
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.default = default
         self.personAccountDefault = personAccountDefault
