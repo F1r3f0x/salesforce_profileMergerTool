@@ -726,9 +726,9 @@ class ProfileSingleValue(ProfileFieldType):
     def __init__(self, model_name, value, is_boolean=False, api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
         self.model_name = model_name
-        
+
         if is_boolean:
-            value = str_to_bool(value) 
+            value = str_to_bool(value)
         self.value = value
 
     @property

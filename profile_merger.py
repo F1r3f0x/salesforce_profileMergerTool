@@ -107,7 +107,7 @@ class UiProfileItem(QListWidgetItem):
             self.model_ref.toggles[self.toggle_name] = value
         elif type(self.model_ref) is models.ProfileSingleValue:
             self.model_ref.value = value
-        
+
         self.__toggle_value = value
 
         self.refresh_item_label()
@@ -397,7 +397,7 @@ class MainWindow(QMainWindow):
                         )
                 else:
                     item = UiProfileItem(model_obj, toggle_value=model_obj.value)
-                    
+
                     GlobalVar.Items.merged[model_name] = item
                     self.ui.list_merged.addItem(item)
 
