@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-""" SF Profile Migrator - Metadata Models.
+""" SF Profile Merger - Metadata Models.
 
 This module has the definitions for the differente Metadata types for Salesforce Profiles.
-Checkout the docs: https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
+Checkout the docs:
+    https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
 
 Attributes:
     DEFAULT_API_VERSION (int):  The API version to use when creating objects.
 
 Copyright: Patricio Labin Correa - 2019
+
+@F1r3f0x
 """
 
 from typing import List
@@ -413,7 +416,9 @@ class ProfileLoginHours(ProfileFieldType):
 
 
 class ProfileLoginIpRanges(ProfileFieldType):
-    def __init__(self, description='', endAddress='', startAddress='', api_version=DEFAULT_API_VERSION):
+    def __init__(
+        self, description='', endAddress='', startAddress='', api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.description = description
         self.endAddress = endAddress
@@ -770,14 +775,22 @@ classes_by_modelName = {
 class Profile:
     def __init__(
         self, applicationVisibilities: List[ProfileApplicationVisibility],
-        categoryGroupVisibilities: List[ProfileCategoryGroupVisibility], classAccesses: List[ProfileApexClassAccess],
-        custom: bool, customPermissions: List[ProfileCustomPermissions], description: str,
-        externalDataSourceAccesses: List[ProfileExternalDataSourceAccess], fieldPermissions: List[ProfileFieldLevelSecurity],
-        fullName: str, layoutAssignments: List[ProfileLayoutAssignments], loginHours: List[ProfileLoginHours],
-        loginIpRanges: List[ProfileLoginIpRanges], objectPermissions: List[ProfileObjectPermissions],
-        pageAccesses: List[ProfileApexPageAccess], profileActionOverrides: List[ProfileActionOverride],
-        recordTypeVisibilities: List[ProfileRecordTypeVisibility], tabVisibilities: List[ProfileTabVisibility],
-        userLicense: str, userPermissions: List[ProfileUserPermission], apiVersion=DEFAULT_API_VERSION
+        categoryGroupVisibilities: List[ProfileCategoryGroupVisibility],
+        classAccesses: List[ProfileApexClassAccess],
+        custom: bool, customPermissions: List[ProfileCustomPermissions],
+        description: str,
+        externalDataSourceAccesses: List[ProfileExternalDataSourceAccess],
+        fieldPermissions: List[ProfileFieldLevelSecurity],
+        fullName: str, layoutAssignments: List[ProfileLayoutAssignments],
+        loginHours: List[ProfileLoginHours],
+        loginIpRanges: List[ProfileLoginIpRanges],
+        objectPermissions: List[ProfileObjectPermissions],
+        pageAccesses: List[ProfileApexPageAccess],
+        profileActionOverrides: List[ProfileActionOverride],
+        recordTypeVisibilities: List[ProfileRecordTypeVisibility],
+        tabVisibilities: List[ProfileTabVisibility],
+        userLicense: str, userPermissions: List[ProfileUserPermission],
+        apiVersion=DEFAULT_API_VERSION
     ):
         self.fullName = fullName
         self.layoutAssignments = layoutAssignments
