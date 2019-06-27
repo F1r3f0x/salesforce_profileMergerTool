@@ -6,12 +6,12 @@
         <visible>true</visible>
     </applicationVisibilities>
     <applicationVisibilities>
-        <application>CustomApp3</application>
+        <application>CustomApp2</application>
         <default>true</default>
         <visible>true</visible>
     </applicationVisibilities>
     <applicationVisibilities>
-        <application>CustomApp4</application>
+        <application>CustomApp3</application>
         <default>true</default>
         <visible>true</visible>
     </applicationVisibilities>
@@ -30,22 +30,26 @@
         <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
-        <field>Account.AccountSource</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>false</editable>
         <field>Account.AnnualRevenue</field>
         <readable>false</readable>
     </fieldPermissions>
     <layoutAssignments>
-        <layout>Account-Business Account Layout</layout>
+        <layout>Account - Account Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>Account-Business Account Layout</layout>
-        <recordType>Account.CustomRT2</recordType>
+        <recordType>Account.CustomRT</recordType>
     </layoutAssignments>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>Account</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>
@@ -145,7 +149,28 @@
         <name>ActivitiesAccess</name>
     </userPermissions>
     <userPermissions>
+        <enabled>true</enabled>
+        <name>AddDirectMessageMembers</name>
+    </userPermissions>
+    <userPermissions>
         <enabled>false</enabled>
         <name>AllowUniversalSearch</name>
     </userPermissions>
+    <applicationVisibilities>
+        <application>CustomApp4</application>
+        <default>true</default>
+        <visible>true</visible>
+    </applicationVisibilities>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Account.AccountSource</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <layoutAssignments>
+        <layout>Account-Business Account Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Account-Business Account Layout</layout>
+        <recordType>Account.CustomRT2</recordType>
+    </layoutAssignments>
 </Profile>

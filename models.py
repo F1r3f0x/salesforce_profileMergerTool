@@ -601,7 +601,10 @@ class ProfileApexPageAccess(ProfileFieldType):
 
 
 class ProfileRecordTypeVisibility(ProfileFieldType):
-    def __init__(self, default=True, personAccountDefault=True, recordType='', visible=True, api_version=DEFAULT_API_VERSION):
+    def __init__(
+        self, default=True, personAccountDefault=None, recordType='', visible=True,
+        api_version=DEFAULT_API_VERSION
+    ):
         super().__init__(api_version)
         self.default = default
         self.personAccountDefault = personAccountDefault
@@ -719,6 +722,27 @@ class ProfileUserPermission(ProfileFieldType):
         return f'{self.model_name}: {self.name}'
 
 
+class ProfileSingleValue(ProfileFieldType):
+    def __init__(self, model_name, value, is_boolean=False, api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.model_name = model_name
+
+        if is_boolean:
+            value = str_to_bool(value)
+        self.value = value
+
+    @property
+    def toggles(self):
+        return None
+
+    @property
+    def fields(self) -> dict:
+        return None
+
+    def __str__(self):
+        return f'{self.model_name}'
+
+
 # TODO: handle different api versions
 classes_by_modelName = {
     ProfileActionOverride().model_name: ProfileActionOverride,
@@ -735,7 +759,11 @@ classes_by_modelName = {
     ProfileObjectPermissions().model_name: ProfileObjectPermissions,
     ProfileRecordTypeVisibility().model_name: ProfileRecordTypeVisibility,
     ProfileTabVisibility().model_name: ProfileTabVisibility,
-    ProfileUserPermission().model_name: ProfileUserPermission
+    ProfileUserPermission().model_name: ProfileUserPermission,
+    'custom': ProfileSingleValue,
+    'description': ProfileSingleValue,
+    'fullName': ProfileSingleValue,
+    'userLicense': ProfileSingleValue
 }
 
 
