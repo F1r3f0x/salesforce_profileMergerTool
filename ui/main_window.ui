@@ -349,6 +349,9 @@
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
+        <property name="statusTip">
+         <string>[Right Click] to toggle values</string>
+        </property>
         <property name="uniformItemSizes">
          <bool>true</bool>
         </property>
@@ -415,6 +418,9 @@
         </property>
         <property name="acceptDrops">
          <bool>false</bool>
+        </property>
+        <property name="statusTip">
+         <string/>
         </property>
         <property name="dragEnabled">
          <bool>false</bool>

@@ -12,6 +12,10 @@ class UiListWidget(QListWidget):
     def mouseReleaseEvent(self, event: QMouseEvent):
         super().mouseReleaseEvent(event)
 
-        print(event)
-        print(event.buttons())
-        print(event.button())
+        if event.button() == Qt.RightButton:
+            clickedItem = self.itemAt(event.pos())
+            if clickedItem:
+                clickedItem.setSelected(False)
+                if clickedItem.toggle_value is not None:
+                    clickedItem.toggle_value = not clickedItem.toggle_value
+
