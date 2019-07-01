@@ -339,7 +339,7 @@
        <number>0</number>
       </property>
       <item row="1" column="1">
-       <widget class="QListWidget" name="list_merged">
+       <widget class="UiListWidget" name="list_merged">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -503,6 +503,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>UiListWidget</class>
+   <extends>QListWidget</extends>
+   <header>UiListWidget.py</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>cmb_api</tabstop>
   <tabstop>btn_target</tabstop>

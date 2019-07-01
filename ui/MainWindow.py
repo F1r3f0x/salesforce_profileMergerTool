@@ -3,12 +3,14 @@
 # Form implementation generated from reading ui file '.\main_window.ui',
 # licensing of '.\main_window.ui' applies.
 #
-# Created: Mon Jul  1 11:14:54 2019
+# Created: Mon Jul  1 16:09:46 2019
 #      by: pyside2-uic  running on PySide2 5.12.4
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide2 import QtCore, QtGui, QtWidgets
+from ui import UiListWidget
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -180,7 +182,7 @@ class Ui_MainWindow(object):
         self.lbl_merged.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_merged.setObjectName("lbl_merged")
         self.fields_selector.addWidget(self.lbl_merged, 0, 1, 1, 1)
-        self.list_source = QtWidgets.QListWidget(self.centralwidget)
+        self.list_source = UiListWidget(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -190,6 +192,7 @@ class Ui_MainWindow(object):
         self.list_source.setDragEnabled(False)
         self.list_source.setUniformItemSizes(True)
         self.list_source.setObjectName("list_source")
+        QtWidgets.QListWidgetItem(self.list_source)
         self.fields_selector.addWidget(self.list_source, 1, 0, 1, 1)
         self.lbl_source_2 = QtWidgets.QLabel(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -203,7 +206,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addLayout(self.fields_selector)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 25))
         self.menubar.setObjectName("menubar")
         self.menuSettings = QtWidgets.QMenu(self.menubar)
         self.menuSettings.setObjectName("menuSettings")
@@ -268,4 +271,3 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(QtWidgets.QApplication.translate("MainWindow", "About", None, -1))
         self.actionMerge.setText(QtWidgets.QApplication.translate("MainWindow", "Merge", None, -1))
         self.actionMerge.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+M", None, -1))
-
