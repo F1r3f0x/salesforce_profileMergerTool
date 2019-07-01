@@ -351,7 +351,7 @@ class ProfileMergerUI(QMainWindow):
             reparsed = minidom.parseString(xml_str)
             xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
-            with open(file_path, 'w', encoding='utf-8') as file_pointer:
+            with open(file_path, 'w+', encoding='utf-8') as file_pointer:
                 file_pointer.write(xml_str)
 
             msgbox = QMessageBox()
