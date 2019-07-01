@@ -110,6 +110,7 @@ class UiProfileItem(QListWidgetItem):
         self.model_ref.model_disabled = disabled
         self.toggle_name = toggle_name
         self.__toggle_value = toggle_value
+
         if toggle_name is not None:
             self.model_ref.toggles[toggle_name] = toggle_value
 
@@ -278,34 +279,41 @@ class ProfileMergerUI(QMainWindow):
         ui = self.ui
         ui.setupUi(self)
 
-        # fill filter cmb
+        # Properties
+        self.lastItem = None
+
+        # Fill filter cmb
         self.ui.cmb_filter.clear()
         self.ui.cmb_filter.addItem('All')
         for model_name in models.classes_by_modelName.keys():
             self.ui.cmb_filter.addItem(model_name)
-
+            
+        # Clear listwidgets
         self.ui.list_source.clear()
+        self.ui.list_target.clear()
+        self.ui.list_merged.clear()
 
+        # Connect buttons
         self.ui.btn_source.clicked.connect(
             lambda: self.find_profile_file(ui.le_source, GlobalVars.FROM_SOURCE, ui.list_source)
         )
         self.ui.btn_target.clicked.connect(
             lambda: self.find_profile_file(ui.le_target, GlobalVars.FROM_TARGET, ui.list_target)
         )
-
-        self.lastItem = None
         self.ui.list_source.itemClicked.connect(self.item_clicked)
         self.ui.list_target.itemClicked.connect(self.item_clicked)
         self.ui.list_merged.itemClicked.connect(self.merged_item_clicked)
-
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
-
         self.ui.btn_start.clicked.connect(self.startBtnClicked)
 
+        # Worker Instance
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
+
+        # QoL Stuff
+        self.setWindowState(QtCore.Qt.WindowMaximized)
 
     def startBtnClicked(self):
         file_path, _filter = QFileDialog.getSaveFileName(
@@ -365,7 +373,8 @@ class ProfileMergerUI(QMainWindow):
             merged_item = self.ui.list_merged.item(row)
             merged_item.item_disabled = False
             if hasattr(item_clicked, 'toggle_value'):
-                merged_item.toggle_value = item_clicked.toggle_value
+                if item_clicked.toggle_value is not None:
+                    merged_item.toggle_value = item_clicked.toggle_value
             else:
                 merged_item.item_disabled = True
 
@@ -427,8 +436,9 @@ class ProfileMergerUI(QMainWindow):
                             GlobalVars.Source.PROPERTIES, self.ui.list_source, key
                         )
                 else:
-                    item = UiProfileItem(model_obj, toggle_value=model_obj.value)
-
+                    item = UiProfileItem(model_obj)
+                    if type(model_obj.value) is bool:
+                        item.toggle_value = model_obj.value
                     GlobalVars.Items.merged[model_name] = item
                     self.ui.list_merged.addItem(item)
 
