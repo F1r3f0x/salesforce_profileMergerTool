@@ -187,25 +187,23 @@ class ProfileScanner(QtCore.QThread):
     # Overloaded, is run by calling its start() function
     def run(self):
         # Reset tables
-        if (GlobalVars.SOURCE_MERGED and GlobalVars.TARGET_MERGED and
-                len(GlobalVars.Merged.PROPERTIES) > 0):
-            GlobalVars.SOURCE_MERGED, GlobalVars.TARGET_MERGED = False, False
+        if (GlobalVars.SOURCE_MERGED or GlobalVars.TARGET_MERGED):
 
-            if self.from_profile == GlobalVars.FROM_SOURCE:
+            properties_rescan = {}
+
+            if (len(GlobalVars.Source.PROPERTIES) > 0
+                    and self.from_profile == GlobalVars.FROM_SOURCE):
+                GlobalVars.Source.PROPERTIES = {}
+                GlobalVars.SOURCE_MERGED = False
                 properties_rescan = GlobalVars.Target.PROPERTIES
             else:
+                GlobalVars.Target.PROPERTIES = {}
+                GlobalVars.TARGET_MERGED = False
                 properties_rescan = GlobalVars.Source.PROPERTIES
 
             GlobalVars.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
                 GlobalVars.Merged.PROPERTIES[key] = value
-
-            if (len(GlobalVars.Source.PROPERTIES) > 0
-                    and self.from_profile == GlobalVars.FROM_SOURCE):
-                GlobalVars.Source.PROPERTIES = {}
-            if (len(GlobalVars.Target.PROPERTIES) > 0
-                    and self.from_profile == GlobalVars.FROM_TARGET):
-                GlobalVars.Target.PROPERTIES = {}
 
         # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
