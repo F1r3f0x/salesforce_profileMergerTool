@@ -449,9 +449,9 @@ class ProfileMergerUI(QMainWindow):
                         GlobalVars.Source.PROPERTIES, self.ui.list_source, key
                     )
 
-            print(f'SOURCE: {self.ui.list_source.count()}')
-            print(f'TARGET: {self.ui.list_target.count()}')
-            print(f'MERGED: {self.ui.list_merged.count()}')
+            print(f'SOURCE: {len(GlobalVars.Source.PROPERTIES.keys())}')
+            print(f'TARGET: {len(GlobalVars.Target.PROPERTIES.keys())}')
+            print(f'MERGED: {len(GlobalVars.Merged.PROPERTIES.keys())}')
 
     def syncScroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
