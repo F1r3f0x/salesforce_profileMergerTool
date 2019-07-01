@@ -403,8 +403,7 @@ class ProfileMergerUI(QMainWindow):
                 model_obj = merged_dict[key]
                 model_name = str(model_obj)
 
-                if type(model_obj) is not models.ProfileSingleValue:
-                    if len(model_obj.toggles.keys()) > 0:
+                if model_obj.toggles is not None:
                         item_group = []
                         for toggle_name, toggle_value in model_obj.toggles.items():
                             if toggle_value is not None:
@@ -426,17 +425,6 @@ class ProfileMergerUI(QMainWindow):
                             self.ui.list_merged.addItem(item)
                     else:
                         item = UiProfileItem(model_obj)
-                        GlobalVars.Items.merged[model_name] = item
-                        self.ui.list_merged.addItem(item)
-
-                        ProfileMergerUI.replicate_item(
-                            GlobalVars.Target.PROPERTIES, self.ui.list_target, key
-                        )
-                        ProfileMergerUI.replicate_item(
-                            GlobalVars.Source.PROPERTIES, self.ui.list_source, key
-                        )
-                else:
-                    item = UiProfileItem(model_obj)
                     if type(model_obj.value) is bool:
                         item.toggle_value = model_obj.value
                     GlobalVars.Items.merged[model_name] = item
