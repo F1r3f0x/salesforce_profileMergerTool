@@ -3,17 +3,20 @@
 # Form implementation generated from reading ui file '.\main_window.ui',
 # licensing of '.\main_window.ui' applies.
 #
-# Created: Mon May 13 09:22:01 2019
-#      by: pyside2-uic  running on PySide2 5.12.2
+# Created: Mon Jul  1 16:09:46 2019
+#      by: pyside2-uic  running on PySide2 5.12.4
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide2 import QtCore, QtGui, QtWidgets
+from ui import UiListWidget
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 768)
+        MainWindow.setDocumentMode(False)
         MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setEnabled(True)
@@ -124,6 +127,15 @@ class Ui_MainWindow(object):
         self.layout_filter.addWidget(self.cmb_filter)
         spacerItem1 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.layout_filter.addItem(spacerItem1)
+        self.btn_start = QtWidgets.QPushButton(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btn_start.sizePolicy().hasHeightForWidth())
+        self.btn_start.setSizePolicy(sizePolicy)
+        self.btn_start.setMinimumSize(QtCore.QSize(80, 36))
+        self.btn_start.setObjectName("btn_start")
+        self.layout_filter.addWidget(self.btn_start)
         self.verticalLayout_2.addLayout(self.layout_filter)
         spacerItem2 = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_2.addItem(spacerItem2)
@@ -131,7 +143,7 @@ class Ui_MainWindow(object):
         self.fields_selector.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.fields_selector.setContentsMargins(-1, -1, -1, 0)
         self.fields_selector.setObjectName("fields_selector")
-        self.list_merged = QtWidgets.QListWidget(self.centralwidget)
+        self.list_merged = UiListWidget(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -177,6 +189,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.list_source.sizePolicy().hasHeightForWidth())
         self.list_source.setSizePolicy(sizePolicy)
         self.list_source.setAcceptDrops(False)
+        self.list_source.setStatusTip("")
         self.list_source.setDragEnabled(False)
         self.list_source.setUniformItemSizes(True)
         self.list_source.setObjectName("list_source")
@@ -191,36 +204,38 @@ class Ui_MainWindow(object):
         self.lbl_source_2.setObjectName("lbl_source_2")
         self.fields_selector.addWidget(self.lbl_source_2, 0, 0, 1, 1)
         self.verticalLayout_2.addLayout(self.fields_selector)
-        self.layout_merge = QtWidgets.QHBoxLayout()
-        self.layout_merge.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
-        self.layout_merge.setContentsMargins(-1, -1, -1, 0)
-        self.layout_merge.setObjectName("layout_merge")
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.layout_merge.addItem(spacerItem3)
-        self.btn_start = QtWidgets.QPushButton(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btn_start.sizePolicy().hasHeightForWidth())
-        self.btn_start.setSizePolicy(sizePolicy)
-        self.btn_start.setMinimumSize(QtCore.QSize(80, 36))
-        self.btn_start.setObjectName("btn_start")
-        self.layout_merge.addWidget(self.btn_start)
-        self.verticalLayout_2.addLayout(self.layout_merge)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 20))
         self.menubar.setObjectName("menubar")
+        self.menuSettings = QtWidgets.QMenu(self.menubar)
+        self.menuSettings.setObjectName("menuSettings")
+        self.menuAbout = QtWidgets.QMenu(self.menubar)
+        self.menuAbout.setObjectName("menuAbout")
+        self.menuFile = QtWidgets.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.actionPerro = QtWidgets.QAction(MainWindow)
+        self.actionPerro.setEnabled(False)
+        self.actionPerro.setObjectName("actionPerro")
+        self.actionAbout = QtWidgets.QAction(MainWindow)
+        self.actionAbout.setObjectName("actionAbout")
+        self.actionMerge = QtWidgets.QAction(MainWindow)
+        self.actionMerge.setObjectName("actionMerge")
+        self.menuSettings.addAction(self.actionPerro)
+        self.menuAbout.addAction(self.actionAbout)
+        self.menuFile.addAction(self.actionMerge)
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuSettings.menuAction())
+        self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
         self.cmb_api.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.cmb_api, self.btn_target)
-        MainWindow.setTabOrder(self.btn_target, self.btn_start)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SF Profile Merger by @f1r3f0x -- WIP", None, -1))
@@ -245,8 +260,15 @@ class Ui_MainWindow(object):
         self.lbl_target.setText(QtWidgets.QApplication.translate("MainWindow", "Profile B (Target):", None, -1))
         self.btn_target.setText(QtWidgets.QApplication.translate("MainWindow", "...", None, -1))
         self.lbl_filter.setText(QtWidgets.QApplication.translate("MainWindow", "Permission Type:", None, -1))
+        self.btn_start.setText(QtWidgets.QApplication.translate("MainWindow", "Merge!", None, -1))
+        self.list_merged.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "[Right Click] to toggle values", None, -1))
         self.lbl_target_2.setText(QtWidgets.QApplication.translate("MainWindow", "<< Profile B", None, -1))
         self.lbl_merged.setText(QtWidgets.QApplication.translate("MainWindow", "Profile Merged", None, -1))
         self.lbl_source_2.setText(QtWidgets.QApplication.translate("MainWindow", "Profile A >>", None, -1))
-        self.btn_start.setText(QtWidgets.QApplication.translate("MainWindow", "Merge!", None, -1))
-
+        self.menuSettings.setTitle(QtWidgets.QApplication.translate("MainWindow", "Settings", None, -1))
+        self.menuAbout.setTitle(QtWidgets.QApplication.translate("MainWindow", "?", None, -1))
+        self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "File", None, -1))
+        self.actionPerro.setText(QtWidgets.QApplication.translate("MainWindow", "TODO", None, -1))
+        self.actionAbout.setText(QtWidgets.QApplication.translate("MainWindow", "About", None, -1))
+        self.actionMerge.setText(QtWidgets.QApplication.translate("MainWindow", "Merge", None, -1))
+        self.actionMerge.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+M", None, -1))

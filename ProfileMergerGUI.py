@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+""" SF Profile Merger - GUI.
+
+This module contains all the GUI functionality for SF Profile Merger
+
+Copyright: Patricio Labin Correa - 2019
+
+@F1r3f0x
+"""
+
 # std
 import sys
 import re
@@ -13,33 +23,21 @@ from PySide2.QtWidgets import QListWidget, QListWidgetItem, QMessageBox
 import qdarkstyle
 
 # mine
-from ui.main_window import Ui_MainWindow
+from ui import UiListWidget, Ui_MainWindow, UiProfileItem
 import models
 import utils
 
-# Brushes
-brush_f_normal = QtGui.QBrush(QtGui.QColor(255, 255, 255))
-brush_f_normal.setStyle(QtCore.Qt.SolidPattern)
-brush_b_normal = QtGui.QBrush(QtGui.QColor(0, 0, 0))
-brush_b_normal.setStyle(QtCore.Qt.NoBrush)
 
-brush_b_enabled = QtGui.QBrush(QtGui.QColor(0, 69, 0))
-brush_b_enabled.setStyle(QtCore.Qt.SolidPattern)
+class GlobalVars:
+    """Global Variables.
 
-brush_b_disabled = QtGui.QBrush(QtGui.QColor(69, 0, 0))
-brush_b_disabled.setStyle(QtCore.Qt.SolidPattern)
-
-brush_b_removed = QtGui.QBrush(QtGui.QColor(71, 71, 71))
-brush_b_removed.setStyle(QtCore.Qt.BDiagPattern)
-brush_f_removed = QtGui.QBrush(QtGui.QColor(170, 170, 170))
-brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
-#
-
-
-class GlobalVar:
-    ITEM_ENABLED = True
-    ITEM_DISABLED = False
-
+    Attributes:
+        SOURCE_MERGED (bool): Is the source file merged?
+        TARGET_MERGED (bool): Is the target file merged?
+        FROM_SOURCE (str): Is from source
+        FROM_TARGET (str): Is from target
+        FROM_MERGED (str): Is from merged
+    """
     SOURCE_MERGED = False
     TARGET_MERGED = False
 
@@ -65,84 +63,6 @@ class GlobalVar:
         merged = {}
 
 
-class UiProfileItem(QListWidgetItem):
-    def __init__(
-        self, model_ref: models.ProfileFieldType, disabled=False,
-        toggle_name=None, toggle_value=None
-    ):
-        super().__init__()
-        self.id = str(model_ref)
-        self.model_ref = model_ref
-        self.model_ref.model_disabled = disabled
-        self.toggle_name = toggle_name
-        self.__toggle_value = toggle_value
-        if toggle_name is not None:
-            self.model_ref.toggles[toggle_name] = toggle_value
-
-        self.refresh_item_label()
-        self.__refresh_styles()
-
-    @property
-    def item_label(self):
-        return self.__item_label
-
-    def refresh_item_label(self):
-        if self.toggle_name is not None:
-            self.__item_label = f'{self.id} -- {self.toggle_name}: {self.toggle_value}'
-        elif type(self.model_ref) is models.ProfileSingleValue:
-            self.__item_label = f'{self.id} -- {self.model_ref.value}'
-        else:
-            self.__item_label = self.id
-
-        self.setText(self.__item_label)
-        self.__refresh_styles()
-
-    @property
-    def toggle_value(self):
-        return self.__toggle_value
-
-    @toggle_value.setter
-    def toggle_value(self, value: bool):
-        if self.toggle_name is not None:
-            self.model_ref.toggles[self.toggle_name] = value
-        elif type(self.model_ref) is models.ProfileSingleValue:
-            self.model_ref.value = value
-
-        self.__toggle_value = value
-
-        self.refresh_item_label()
-        self.__refresh_styles()
-
-    @property
-    def item_disabled(self):
-        return self.model_ref.model_disabled
-
-    @item_disabled.setter
-    def item_disabled(self, value):
-        self.model_ref.model_disabled = value
-
-        self.refresh_item_label()
-        self.__refresh_styles()
-
-    def __refresh_styles(self):
-        if self.toggle_value is not None:
-            if self.toggle_value:
-                self.setBackground(brush_b_enabled)
-            else:
-                self.setBackground(brush_b_disabled)
-
-        if self.item_disabled:
-            self.setBackground(brush_b_removed)
-            self.setForeground(brush_f_removed)
-        else:
-            self.setForeground(brush_f_normal)
-            if self.toggle_value is None:
-                self.setBackground(brush_b_normal)
-
-    def __str__(self):
-        return f'<UiProfileItem: {self.text()}>'
-
-
 class ProfileScanner(QtCore.QThread):
     updateProgress = QtCore.Signal(int)
     addItems = QtCore.Signal(dict)
@@ -155,23 +75,23 @@ class ProfileScanner(QtCore.QThread):
     # Overloaded, is run by calling its start() function
     def run(self):
         # Reset tables
-        if (GlobalVar.SOURCE_MERGED and GlobalVar.TARGET_MERGED and
-                len(GlobalVar.Merged.PROPERTIES) > 0):
-            GlobalVar.SOURCE_MERGED, GlobalVar.TARGET_MERGED = False, False
+        if (GlobalVars.SOURCE_MERGED or GlobalVars.TARGET_MERGED):
 
-            if self.from_profile == GlobalVar.FROM_SOURCE:
-                properties_rescan = GlobalVar.Target.PROPERTIES
+            properties_rescan = {}
+
+            if (len(GlobalVars.Source.PROPERTIES) > 0
+                    and self.from_profile == GlobalVars.FROM_SOURCE):
+                GlobalVars.Source.PROPERTIES = {}
+                GlobalVars.SOURCE_MERGED = False
+                properties_rescan = GlobalVars.Target.PROPERTIES
             else:
-                properties_rescan = GlobalVar.Source.PROPERTIES
+                GlobalVars.Target.PROPERTIES = {}
+                GlobalVars.TARGET_MERGED = False
+                properties_rescan = GlobalVars.Source.PROPERTIES
 
-            GlobalVar.Merged.PROPERTIES = {}
+            GlobalVars.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
-                GlobalVar.Merged.PROPERTIES[key] = value
-
-            if len(GlobalVar.Source.PROPERTIES) > 0 and self.from_profile == GlobalVar.FROM_SOURCE:
-                GlobalVar.Source.PROPERTIES = {}
-            if len(GlobalVar.Target.PROPERTIES) > 0 and self.from_profile == GlobalVar.FROM_TARGET:
-                GlobalVar.Target.PROPERTIES = {}
+                GlobalVars.Merged.PROPERTIES[key] = value
 
         # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
@@ -189,14 +109,14 @@ class ProfileScanner(QtCore.QThread):
             namespace_value = namespace.replace('{', '')
             namespace_value = namespace_value.replace('}', '')
 
-            if self.from_profile == GlobalVar.FROM_SOURCE and not GlobalVar.Source.NAMESPACE:
-                GlobalVar.Source.NAMESPACE = namespace_value
-            if self.from_profile == GlobalVar.FROM_TARGET and not GlobalVar.Target.NAMESPACE:
-                GlobalVar.Target.NAMESPACE = namespace_value
+            if self.from_profile == GlobalVars.FROM_SOURCE and not GlobalVars.Source.NAMESPACE:
+                GlobalVars.Source.NAMESPACE = namespace_value
+            if self.from_profile == GlobalVars.FROM_TARGET and not GlobalVars.Target.NAMESPACE:
+                GlobalVars.Target.NAMESPACE = namespace_value
 
             field_type_name = prof_field_element.tag.replace(namespace, '')
 
-            # TODO: create exception if not found
+            # TODO: create exception and handle if not found
             model_class = models.classes_by_modelName.get(field_type_name)
 
             if model_class:
@@ -221,18 +141,16 @@ class ProfileScanner(QtCore.QThread):
 
                 _id = str(profile_field)
 
-                pprint(profile_field.__dict__)
-
-                GlobalVar.Merged.PROPERTIES[_id] = profile_field
+                GlobalVars.Merged.PROPERTIES[_id] = profile_field
                 fields_dict[_id] = profile_field
 
-                if self.from_profile == GlobalVar.FROM_SOURCE:
-                    GlobalVar.Source.PROPERTIES[_id] = profile_field
-                if self.from_profile == GlobalVar.FROM_TARGET:
-                    GlobalVar.Target.PROPERTIES[_id] = profile_field
+                if self.from_profile == GlobalVars.FROM_SOURCE:
+                    GlobalVars.Source.PROPERTIES[_id] = profile_field
+                if self.from_profile == GlobalVars.FROM_TARGET:
+                    GlobalVars.Target.PROPERTIES[_id] = profile_field
 
-        GlobalVar.SOURCE_MERGED = len(GlobalVar.Source.PROPERTIES) > 0
-        GlobalVar.TARGET_MERGED = len(GlobalVar.Target.PROPERTIES) > 0
+        GlobalVars.SOURCE_MERGED = len(GlobalVars.Source.PROPERTIES) > 0
+        GlobalVars.TARGET_MERGED = len(GlobalVars.Target.PROPERTIES) > 0
 
         self.addItems.emit({
             'from': self.from_profile,  # with love from
@@ -240,41 +158,48 @@ class ProfileScanner(QtCore.QThread):
         })
 
 
-class MainWindow(QMainWindow):
+class ProfileMergerUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
         ui = self.ui
         ui.setupUi(self)
 
-        # fill filter cmb
+        # Properties
+        self.lastItem = None
+
+        # Fill filter cmb
         self.ui.cmb_filter.clear()
         self.ui.cmb_filter.addItem('All')
         for model_name in models.classes_by_modelName.keys():
             self.ui.cmb_filter.addItem(model_name)
-
+            
+        # Clear listwidgets
         self.ui.list_source.clear()
+        self.ui.list_target.clear()
+        self.ui.list_merged.clear()
 
+        # Connect buttons
         self.ui.btn_source.clicked.connect(
-            lambda: self.find_profile_file(ui.le_source, GlobalVar.FROM_SOURCE, ui.list_source)
+            lambda: self.find_profile_file(ui.le_source, GlobalVars.FROM_SOURCE, ui.list_source)
         )
         self.ui.btn_target.clicked.connect(
-            lambda: self.find_profile_file(ui.le_target, GlobalVar.FROM_TARGET, ui.list_target)
+            lambda: self.find_profile_file(ui.le_target, GlobalVars.FROM_TARGET, ui.list_target)
         )
-
-        self.lastItem = None
         self.ui.list_source.itemClicked.connect(self.item_clicked)
         self.ui.list_target.itemClicked.connect(self.item_clicked)
         self.ui.list_merged.itemClicked.connect(self.merged_item_clicked)
-
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
-
         self.ui.btn_start.clicked.connect(self.startBtnClicked)
 
+        # Worker Instance
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.addItems)
+
+        # QoL Stuff
+        self.setWindowState(QtCore.Qt.WindowMaximized)
 
     def startBtnClicked(self):
         file_path, _filter = QFileDialog.getSaveFileName(
@@ -289,7 +214,7 @@ class MainWindow(QMainWindow):
                 'Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'}
             )
 
-            for model_field in GlobalVar.Merged.PROPERTIES.values():
+            for model_field in GlobalVars.Merged.PROPERTIES.values():
                 if not model_field.model_disabled:
                     if type(model_field) is not models.ProfileSingleValue:
                         c = ElementTree.SubElement(xml_root, model_field.model_name)
@@ -312,7 +237,7 @@ class MainWindow(QMainWindow):
             reparsed = minidom.parseString(xml_str)
             xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
-            with open(file_path, 'w', encoding='utf-8') as file_pointer:
+            with open(file_path, 'w+', encoding='utf-8') as file_pointer:
                 file_pointer.write(xml_str)
 
             msgbox = QMessageBox()
@@ -334,7 +259,8 @@ class MainWindow(QMainWindow):
             merged_item = self.ui.list_merged.item(row)
             merged_item.item_disabled = False
             if hasattr(item_clicked, 'toggle_value'):
-                merged_item.toggle_value = item_clicked.toggle_value
+                if item_clicked.toggle_value is not None:
+                    merged_item.toggle_value = item_clicked.toggle_value
             else:
                 merged_item.item_disabled = True
 
@@ -343,7 +269,7 @@ class MainWindow(QMainWindow):
     def merged_item_clicked(self, item_clicked: QListWidgetItem):
         disabled = item_clicked.item_disabled
         if hasattr(item_clicked, 'item_disabled'):
-            merged = GlobalVar.Items.merged[item_clicked.id]
+            merged = GlobalVars.Items.merged[item_clicked.id]
             if type(merged) is list:
                 for item in merged:
                     item.item_disabled = not disabled
@@ -353,7 +279,7 @@ class MainWindow(QMainWindow):
 
     def addItems(self, package: dict):
         if self.list_target:
-            merged_dict = GlobalVar.Merged.PROPERTIES
+            merged_dict = GlobalVars.Merged.PROPERTIES
 
             # Fill merged list
             self.ui.list_merged.clear()
@@ -363,54 +289,43 @@ class MainWindow(QMainWindow):
                 model_obj = merged_dict[key]
                 model_name = str(model_obj)
 
-                if type(model_obj) is not models.ProfileSingleValue:
-                    if len(model_obj.toggles.keys()) > 0:
-                        item_group = []
-                        for toggle_name, toggle_value in model_obj.toggles.items():
-                            if toggle_value is not None:
-                                toggle_value = utils.str_to_bool(toggle_value)
-                                item = UiProfileItem(
-                                    model_obj, toggle_name=toggle_name, toggle_value=toggle_value
-                                )
-                                item_group.append(item)
-                                MainWindow.replicate_item(
-                                    GlobalVar.Target.PROPERTIES, self.ui.list_target, key,
-                                    toggle_name
-                                )
-                                MainWindow.replicate_item(
-                                    GlobalVar.Source.PROPERTIES, self.ui.list_source, key,
-                                    toggle_name
-                                )
-                        GlobalVar.Items.merged[model_name] = item_group
-                        for item in item_group:
-                            self.ui.list_merged.addItem(item)
-                    else:
-                        item = UiProfileItem(model_obj)
-                        GlobalVar.Items.merged[model_name] = item
+                if model_obj.toggles is not None:
+                    item_group = []
+                    for toggle_name, toggle_value in model_obj.toggles.items():
+                        if toggle_value is not None:
+                            toggle_value = utils.str_to_bool(toggle_value)
+                            item = UiProfileItem(
+                                model_obj, toggle_name=toggle_name, toggle_value=toggle_value
+                            )
+                            item_group.append(item)
+                            ProfileMergerUI.replicate_item(
+                                GlobalVars.Target.PROPERTIES, self.ui.list_target, key,
+                                toggle_name
+                            )
+                            ProfileMergerUI.replicate_item(
+                                GlobalVars.Source.PROPERTIES, self.ui.list_source, key,
+                                toggle_name
+                            )
+                    GlobalVars.Items.merged[model_name] = item_group
+                    for item in item_group:
                         self.ui.list_merged.addItem(item)
-
-                        MainWindow.replicate_item(
-                            GlobalVar.Target.PROPERTIES, self.ui.list_target, key
-                        )
-                        MainWindow.replicate_item(
-                            GlobalVar.Source.PROPERTIES, self.ui.list_source, key
-                        )
                 else:
-                    item = UiProfileItem(model_obj, toggle_value=model_obj.value)
-
-                    GlobalVar.Items.merged[model_name] = item
+                    item = UiProfileItem(model_obj)
+                    if type(model_obj.value) is bool:
+                        item.toggle_value = model_obj.value
+                    GlobalVars.Items.merged[model_name] = item
                     self.ui.list_merged.addItem(item)
 
-                    MainWindow.replicate_item(
-                        GlobalVar.Target.PROPERTIES, self.ui.list_target, key
+                    ProfileMergerUI.replicate_item(
+                        GlobalVars.Target.PROPERTIES, self.ui.list_target, key
                     )
-                    MainWindow.replicate_item(
-                        GlobalVar.Source.PROPERTIES, self.ui.list_source, key
+                    ProfileMergerUI.replicate_item(
+                        GlobalVars.Source.PROPERTIES, self.ui.list_source, key
                     )
 
-            print(f'SOURCE: {self.ui.list_source.count()}')
-            print(f'TARGET: {self.ui.list_target.count()}')
-            print(f'MERGED: {self.ui.list_merged.count()}')
+            print(f'SOURCE: {len(GlobalVars.Source.PROPERTIES.keys())}')
+            print(f'TARGET: {len(GlobalVars.Target.PROPERTIES.keys())}')
+            print(f'MERGED: {len(GlobalVars.Merged.PROPERTIES.keys())}')
 
     def syncScroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
@@ -436,9 +351,9 @@ class MainWindow(QMainWindow):
             self.scanner_worker.start()
 
             file_name = file_path.split('/')[-1].replace('.profile', '')
-            if from_profile == GlobalVar.FROM_SOURCE:
+            if from_profile == GlobalVars.FROM_SOURCE:
                 self.ui.lbl_source_2.setText(file_name)
-            if from_profile == GlobalVar.FROM_TARGET:
+            if from_profile == GlobalVars.FROM_TARGET:
                 self.ui.lbl_target_2.setText(file_name)
 
         return file_path
@@ -446,7 +361,7 @@ class MainWindow(QMainWindow):
     def replicate_item(global_dict, ui_list, key, toggle_name=None):
         if global_dict.get(key):
             model_obj = global_dict[key]
-            if (toggle_name is not None):
+            if toggle_name is not None:
                 # Get the value from the item, not the merged list
                 toggle_value = model_obj.toggles[toggle_name]
 
@@ -474,6 +389,6 @@ if __name__ == "__main__":
     # Setup Style
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
 
-    window = MainWindow()
+    window = ProfileMergerUI()
     window.show()
     sys.exit(app.exec_())
