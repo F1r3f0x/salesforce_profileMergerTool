@@ -66,7 +66,7 @@ class UiProfileItem(QListWidgetItem):
     @toggle_value.setter
     def toggle_value(self, value: bool):
         if self.toggle_name is not None:
-            self.model_ref.toggles[self.toggle_name] = value
+            setattr(self.model_ref, self.toggle_name, value)
         elif type(self.model_ref) is models.ProfileSingleValue:
             self.model_ref.value = value
 
