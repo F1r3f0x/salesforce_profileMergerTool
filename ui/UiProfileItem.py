@@ -1,5 +1,5 @@
 from PySide2 import QtGui, QtCore
-from PySide2.QtWidgets import QListWidgetItem
+from PySide2.QtWidgets import QTreeWidgetItem
 import models
 
 # Brushes
@@ -20,7 +20,7 @@ brush_f_removed = QtGui.QBrush(QtGui.QColor(170, 170, 170))
 brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
 
 
-class UiProfileItem(QListWidgetItem):
+class UiProfileItem(QTreeWidgetItem):
     """Profile Field as a QListWidgetItem.
 
     It contains styling to signal its status and a reference to the field type object
@@ -40,10 +40,10 @@ class UiProfileItem(QListWidgetItem):
 
     """
     def __init__(
-        self, model_ref: models.ProfileFieldType, disabled=False,
+        self, model_ref: models.ProfileFieldType, *args, disabled=False,
         toggle_name=None, toggle_value=None
     ):
-        super().__init__()
+        super().__init__(*args)
         self.id = str(model_ref)
         self.model_ref = model_ref
         self.model_ref.model_disabled = disabled
@@ -94,21 +94,21 @@ class UiProfileItem(QListWidgetItem):
         else:
             self.__item_label = self.id
 
-        self.setText(self.__item_label)
+        self.setText(0, self.__item_label)
 
         if self.toggle_value is not None:
             if self.toggle_value:
-                self.setBackground(brush_b_enabled)
+                self.setBackground(0, brush_b_enabled)
             else:
-                self.setBackground(brush_b_disabled)
+                self.setBackground(0, brush_b_disabled)
 
         if self.item_disabled:
-            self.setBackground(brush_b_removed)
-            self.setForeground(brush_f_removed)
+            self.setBackground(0, brush_b_removed)
+            self.setForeground(0, brush_f_removed)
         else:
-            self.setForeground(brush_f_normal)
+            self.setForeground(0, brush_f_normal)
             if self.toggle_value is None:
-                self.setBackground(brush_b_normal)
+                self.setBackground(0, brush_b_normal)
 
     def __str__(self):
         return f'<UiProfileItem: {self.text()}>'

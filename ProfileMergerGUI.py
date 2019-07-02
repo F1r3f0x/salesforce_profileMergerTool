@@ -17,13 +17,12 @@ from pprint import pprint
 
 # qt
 from PySide2 import QtCore
-from PySide2 import QtGui
 from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
-from PySide2.QtWidgets import QListWidget, QListWidgetItem, QMessageBox
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QMessageBox
 import qdarkstyle
 
 # mine
-from ui import UiListWidget, Ui_MainWindow, UiProfileItem
+from ui import Ui_MainWindow, UiProfileItem
 import models
 import utils
 
@@ -245,18 +244,26 @@ class ProfileMergerUI(QMainWindow):
             msgbox.setText('DONE!\t\t\t\t')
             msgbox.exec_()
 
-    def item_clicked(self, item_clicked: QListWidgetItem):
+    def item_clicked(self, item_clicked: QTreeWidgetItem):
         if type(item_clicked) is UiProfileItem:
-            row = None
-            if item_clicked.listWidget() is self.ui.list_source:
-                row = self.ui.list_source.row(item_clicked)
-            elif item_clicked.listWidget() is self.ui.list_target:
-                row = self.ui.list_target.row(item_clicked)
+            parent_item = None
+            parent_row = None
+            child_row = None
+            if item_clicked.treeWidget() is self.ui.list_source:
+                parent_item = item_clicked.parent()
+                parent_row = self.ui.list_source.indexOfTopLevelItem(parent_item)
+                child_row = parent_item.indexOfChild(item_clicked)
+            elif item_clicked.treeWidget() is self.ui.list_target:
+                parent_item = item_clicked.parent()
+                parent_row = self.ui.list_target.indexOfTopLevelItem(parent_item)
+                child_row = parent_item.indexOfChild(item_clicked)
             else:
                 # what in the fuck are you doing here
                 return
 
-            merged_item = self.ui.list_merged.item(row)
+            parent_merged_item = self.ui.list_merged.topLevelItem(parent_row)
+            parent_merged_item.setExpanded(True)
+            merged_item = parent_merged_item.child(child_row)
             merged_item.item_disabled = False
             if hasattr(item_clicked, 'toggle_value'):
                 if item_clicked.toggle_value is not None:
@@ -266,7 +273,7 @@ class ProfileMergerUI(QMainWindow):
 
         item_clicked.setSelected(False)
 
-    def merged_item_clicked(self, item_clicked: QListWidgetItem):
+    def merged_item_clicked(self, item_clicked: QTreeWidgetItem):
         disabled = item_clicked.item_disabled
         if hasattr(item_clicked, 'item_disabled'):
             merged = GlobalVars.Items.merged[item_clicked.id]
@@ -281,12 +288,30 @@ class ProfileMergerUI(QMainWindow):
         if self.list_target:
             merged_dict = GlobalVars.Merged.PROPERTIES
 
-            # Fill merged list
             self.ui.list_merged.clear()
             self.ui.list_source.clear()
             self.ui.list_target.clear()
+
+            categories_items_merged = {}
+            categories_items_source = {}
+            categories_items_target = {}
+            for key, value in models.classes_by_modelName.items():
+                tree_item = QTreeWidgetItem()
+                tree_item.setText(0, key)
+                categories_items_source[key] = tree_item
+                
+                tree_item = QTreeWidgetItem()
+                tree_item.setText(0, key)
+                categories_items_target[key] = tree_item
+                
+                tree_item = QTreeWidgetItem()
+                tree_item.setText(0, key)
+                categories_items_merged[key] = tree_item
+
+            # Fill merged list
             for key in sorted(merged_dict.keys()):
                 model_obj = merged_dict[key]
+                model_type = model_obj.model_name
                 model_name = str(model_obj)
 
                 if model_obj.toggles is not None:
@@ -294,34 +319,51 @@ class ProfileMergerUI(QMainWindow):
                     for toggle_name, toggle_value in model_obj.toggles.items():
                         if toggle_value is not None:
                             toggle_value = utils.str_to_bool(toggle_value)
+
                             item = UiProfileItem(
-                                model_obj, toggle_name=toggle_name, toggle_value=toggle_value
+                                model_obj, categories_items_merged[model_type],
+                                toggle_name=toggle_name, toggle_value=toggle_value,
                             )
                             item_group.append(item)
+
                             ProfileMergerUI.replicate_item(
-                                GlobalVars.Target.PROPERTIES, self.ui.list_target, key,
+                                GlobalVars.Target.PROPERTIES,
+                                categories_items_target[model_type], self.ui.list_target, key,
                                 toggle_name
                             )
                             ProfileMergerUI.replicate_item(
-                                GlobalVars.Source.PROPERTIES, self.ui.list_source, key,
+                                GlobalVars.Source.PROPERTIES,
+                                categories_items_source[model_type], self.ui.list_source, key,
                                 toggle_name
                             )
+
                     GlobalVars.Items.merged[model_name] = item_group
-                    for item in item_group:
-                        self.ui.list_merged.addItem(item)
                 else:
-                    item = UiProfileItem(model_obj)
+                    item = UiProfileItem(model_obj, categories_items_merged[model_type])
                     if type(model_obj.value) is bool:
                         item.toggle_value = model_obj.value
                     GlobalVars.Items.merged[model_name] = item
-                    self.ui.list_merged.addItem(item)
+                    self.ui.list_merged.addTopLevelItem(item)
 
                     ProfileMergerUI.replicate_item(
-                        GlobalVars.Target.PROPERTIES, self.ui.list_target, key
+                        GlobalVars.Target.PROPERTIES, categories_items_target[model_type],
+                        self.ui.list_target, key
                     )
                     ProfileMergerUI.replicate_item(
-                        GlobalVars.Source.PROPERTIES, self.ui.list_source, key
+                        GlobalVars.Source.PROPERTIES, categories_items_source[model_type],
+                        self.ui.list_source, key
                     )
+
+            all_suff = {
+                self.ui.list_target: categories_items_target,
+                self.ui.list_merged: categories_items_merged,
+                self.ui.list_source: categories_items_source
+            }
+
+            for tree_widget, categories in all_suff.items():
+                for item in categories.values():
+                    if item.childCount() > 0:
+                        tree_widget.addTopLevelItem(item)
 
             print(f'SOURCE: {len(GlobalVars.Source.PROPERTIES.keys())}')
             print(f'TARGET: {len(GlobalVars.Target.PROPERTIES.keys())}')
@@ -333,7 +375,7 @@ class ProfileMergerUI(QMainWindow):
         self.ui.list_merged.verticalScrollBar().setValue(value)
 
     # Uses open file dialog to setup a filepath
-    def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QListWidget):
+    def find_profile_file(self, le_target: QLineEdit, from_profile: str, list_target: QTreeWidget):
         file_path, _filter = QFileDialog.getOpenFileName(
             self,
             'Pick your Profile file',
@@ -351,14 +393,12 @@ class ProfileMergerUI(QMainWindow):
             self.scanner_worker.start()
 
             file_name = file_path.split('/')[-1].replace('.profile', '')
-            if from_profile == GlobalVars.FROM_SOURCE:
-                self.ui.lbl_source_2.setText(file_name)
-            if from_profile == GlobalVars.FROM_TARGET:
-                self.ui.lbl_target_2.setText(file_name)
 
         return file_path
 
-    def replicate_item(global_dict, ui_list, key, toggle_name=None):
+    def replicate_item(
+        global_dict, parent_item: QTreeWidgetItem, ui_list: QTreeWidget, key, toggle_name=None
+    ):
         if global_dict.get(key):
             model_obj = global_dict[key]
             if toggle_name is not None:
@@ -366,21 +406,18 @@ class ProfileMergerUI(QMainWindow):
                 toggle_value = model_obj.toggles[toggle_name]
 
                 item = UiProfileItem(
-                    model_obj, toggle_name=toggle_name, toggle_value=toggle_value
+                    model_obj, parent_item, toggle_name=toggle_name, toggle_value=toggle_value
                 )
             elif type(model_obj) is models.ProfileSingleValue and type(model_obj.value) is bool:
                 item = UiProfileItem(
-                    model_obj, toggle_value=model_obj.value
+                    model_obj, parent_item, toggle_value=model_obj.value
                 )
 
             else:
-                item = UiProfileItem(model_obj)
-
-            # global_dict[item.text()] = item
-
-            ui_list.addItem(item)
+                item = UiProfileItem(model_obj, parent_item)
         else:
-            ui_list.addItem('')
+            item = QTreeWidgetItem(parent_item)
+            item.setText(0, '')
 
 
 if __name__ == "__main__":

@@ -315,101 +315,15 @@
      </layout>
     </item>
     <item>
-     <spacer name="spc_1">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>0</width>
-        <height>10</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="fields_selector" rowstretch="0,0">
+     <layout class="QGridLayout" name="fields_selector" rowstretch="0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="1" column="1">
-       <widget class="UiListWidget" name="list_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>[Right Click] to toggle values</string>
-        </property>
-        <property name="uniformItemSizes">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QListWidget" name="list_target">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="dragEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="uniformItemSizes">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="lbl_target_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>&lt;&lt; Profile B</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="lbl_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Profile Merged</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QListWidget" name="list_source">
+      <item row="0" column="0">
+       <widget class="QTreeWidget" name="list_source">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -425,32 +339,59 @@
         <property name="dragEnabled">
          <bool>false</bool>
         </property>
-        <property name="uniformItemSizes">
-         <bool>true</bool>
-        </property>
+        <column>
+         <property name="text">
+          <string>Profile A</string>
+         </property>
+        </column>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="lbl_source_2">
+      <item row="0" column="1">
+       <widget class="UiTreeWidget" name="list_merged">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="text">
-         <string>Profile A &gt;&gt;</string>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+        <property name="statusTip">
+         <string>[Right Click] to toggle values</string>
         </property>
+        <column>
+         <property name="text">
+          <string>Profile Merged</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QTreeWidget" name="list_target">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+        <property name="dragEnabled">
+         <bool>false</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>Profile B</string>
+         </property>
+        </column>
        </widget>
       </item>
      </layout>
     </item>
    </layout>
    <zorder></zorder>
-   <zorder>spc_1</zorder>
    <zorder></zorder>
    <zorder></zorder>
    <zorder></zorder>
@@ -461,7 +402,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -511,9 +452,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>UiListWidget</class>
-   <extends>QListWidget</extends>
-   <header>UiListWidget.py</header>
+   <class>UiTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>UiTreeWidget.py</header>
   </customwidget>
  </customwidgets>
  <tabstops>
