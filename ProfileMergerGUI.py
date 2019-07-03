@@ -347,8 +347,6 @@ class ProfileMergerUI(QMainWindow):
                 model_type = model_obj.model_name
                 model_name = str(model_obj)
 
-                print(model_type, model_name)
-
                 if len(model_obj.toggles.values()) > 0:
                     item_group = []
                     for toggle_name, toggle_value in model_obj.toggles.items():
