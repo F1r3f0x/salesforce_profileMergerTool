@@ -21,7 +21,7 @@ brush_f_removed.setStyle(QtCore.Qt.SolidPattern)
 
 
 class UiProfileItem(QTreeWidgetItem):
-    """Profile Field as a QListWidgetItem.
+    """Profile Field as a QTreeWidgetItem.
 
     It contains styling to signal its status and a reference to the field type object
 

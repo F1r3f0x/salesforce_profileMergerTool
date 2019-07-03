@@ -736,14 +736,6 @@ class ProfileSingleValue(ProfileFieldType):
             value = str_to_bool(value)
         self.value = value
 
-    @property
-    def toggles(self):
-        return None
-
-    @property
-    def fields(self) -> dict:
-        return None
-
     def __str__(self):
         return f'{self.model_name}'
 
