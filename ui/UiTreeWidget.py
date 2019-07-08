@@ -1,10 +1,10 @@
-from PySide2.QtWidgets import QListWidget
+from PySide2.QtWidgets import QTreeWidget
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtCore import Qt
 from pprint import pprint
 
 
-class UiListWidget(QListWidget):
+class UiTreeWidget(QTreeWidget):
 
     def __init__(self, *args):
         return super().__init__(*args)

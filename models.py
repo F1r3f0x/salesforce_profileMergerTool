@@ -88,7 +88,7 @@ class ProfileActionOverride(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
+        return f'{self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
 
 
 class ProfileApplicationVisibility(ProfileFieldType):
@@ -139,7 +139,7 @@ class ProfileApplicationVisibility(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.application}'
+        return f'{self.application}'
 
 
 class ProfileCategoryGroupVisibility(ProfileFieldType):
@@ -181,7 +181,7 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.dataCategoryGroup}'
+        return f'{self.dataCategoryGroup}'
 
 
 class ProfileApexClassAccess(ProfileFieldType):
@@ -218,7 +218,7 @@ class ProfileApexClassAccess(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.apexClass}'
+        return f'{self.apexClass}'
 
 
 class ProfileCustomPermissions(ProfileFieldType):
@@ -255,7 +255,7 @@ class ProfileCustomPermissions(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.name}'
+        return f'{self.name}'
 
 
 class ProfileExternalDataSourceAccess(ProfileFieldType):
@@ -292,7 +292,7 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.externalDataSource}'
+        return f'{self.externalDataSource}'
 
 
 class ProfileFieldLevelSecurity(ProfileFieldType):
@@ -363,7 +363,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.field}'
+        return f'{self.field}'
 
 
 class ProfileLayoutAssignments(ProfileFieldType):
@@ -387,9 +387,9 @@ class ProfileLayoutAssignments(ProfileFieldType):
 
     def __str__(self):
         if self.recordType != '':
-            return f'{self.model_name}: {self.layout}: {self.recordType}'
+            return f'{self.layout}: {self.recordType}'
         else:
-            return f'{self.model_name}: {self.layout}'
+            return f'{self.layout}'
 
 
 class ProfileLoginHours(ProfileFieldType):
@@ -412,7 +412,7 @@ class ProfileLoginHours(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.weekdayStart}: {self.weekdayEnd}'
+        return f'{self.weekdayStart}: {self.weekdayEnd}'
 
 
 class ProfileLoginIpRanges(ProfileFieldType):
@@ -439,7 +439,7 @@ class ProfileLoginIpRanges(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.description}: {self.startAddress} - {self.endAddress}'
+        return f'{self.description}: {self.startAddress} - {self.endAddress}'
 
 
 class ProfileObjectPermissions(ProfileFieldType):
@@ -565,7 +565,7 @@ class ProfileObjectPermissions(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.object}'
+        return f'{self.object}'
 
 
 class ProfileApexPageAccess(ProfileFieldType):
@@ -602,7 +602,7 @@ class ProfileApexPageAccess(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.apexPage}'
+        return f'{self.apexPage}'
 
 
 class ProfileRecordTypeVisibility(ProfileFieldType):
@@ -664,7 +664,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.recordType}'
+        return f'{self.recordType}'
 
 
 class ProfileTabVisibility(ProfileFieldType):
@@ -687,7 +687,7 @@ class ProfileTabVisibility(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.tab}: {self.visibility}'
+        return f'{self.tab}: {self.visibility}'
 
 
 class ProfileUserPermission(ProfileFieldType):
@@ -724,7 +724,7 @@ class ProfileUserPermission(ProfileFieldType):
         self._set_fields(input_dict)
 
     def __str__(self):
-        return f'{self.model_name}: {self.name}'
+        return f'{self.name}'
 
 
 class ProfileSingleValue(ProfileFieldType):
@@ -735,14 +735,6 @@ class ProfileSingleValue(ProfileFieldType):
         if is_boolean:
             value = str_to_bool(value)
         self.value = value
-
-    @property
-    def toggles(self):
-        return None
-
-    @property
-    def fields(self) -> dict:
-        return None
 
     def __str__(self):
         return f'{self.model_name}'
