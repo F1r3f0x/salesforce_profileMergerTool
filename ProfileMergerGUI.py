@@ -427,6 +427,8 @@ class ProfileMergerUI(QMainWindow):
 
             file_name = file_path.split('/')[-1].replace('.profile', '')
 
+            list_target.setHeaderLabel(file_name)
+
         return file_path
 
     def replicate_item(
