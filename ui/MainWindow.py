@@ -214,7 +214,7 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.cmb_api, self.btn_target)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SF Profile Merger by @f1r3f0x -- WIP", None, -1))
+        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SF Profile Merger by @f1r3f0x -- WIP -- 0.0.1", None, -1))
         self.lbl_api.setText(QtWidgets.QApplication.translate("MainWindow", "(TODO) Base Api Version:", None, -1))
         self.cmb_api.setItemText(0, QtWidgets.QApplication.translate("MainWindow", "45", None, -1))
         self.cmb_api.setItemText(1, QtWidgets.QApplication.translate("MainWindow", "44", None, -1))
