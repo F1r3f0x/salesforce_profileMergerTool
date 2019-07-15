@@ -202,20 +202,21 @@ class ProfileMergerUI(QMainWindow):
 
         self.ui.actionExpand_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(True))
         self.ui.actionCollapse_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(False))
+        self.ui.actionMerge.triggered.connect(self.save_merged_profile)
 
-        self.ui.list_source.verticalScrollBar().valueChanged.connect(self.syncScroll)
-        self.ui.list_target.verticalScrollBar().valueChanged.connect(self.syncScroll)
-        self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.syncScroll)
-        self.ui.btn_start.clicked.connect(self.startBtnClicked)
+        self.ui.list_source.verticalScrollBar().valueChanged.connect(self.sync_scroll)
+        self.ui.list_target.verticalScrollBar().valueChanged.connect(self.sync_scroll)
+        self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.sync_scroll)
+        self.ui.btn_start.clicked.connect(self.save_merged_profile)
 
         # Worker Instance
         self.scanner_worker = ProfileScanner()
-        self.scanner_worker.addItems.connect(self.addItems)
+        self.scanner_worker.addItems.connect(self.add_items)
 
         # QoL Stuff
         self.setWindowState(QtCore.Qt.WindowMaximized)
 
-    def startBtnClicked(self):
+    def save_merged_profile(self):
         file_path, _filter = QFileDialog.getSaveFileName(
             self,
             'Save your Profile file',
@@ -230,7 +231,7 @@ class ProfileMergerUI(QMainWindow):
 
             for model_field in sorted(
                 GlobalVars.Merged.PROPERTIES.values(), key=lambda x: x.model_name + str(x)
-                ):
+            ):
                 if not model_field.model_disabled:
                     if type(model_field) is not models.ProfileSingleValue:
                         c = ElementTree.SubElement(xml_root, model_field.model_name)
@@ -257,8 +258,9 @@ class ProfileMergerUI(QMainWindow):
                 file_pointer.write(xml_str)
 
             msgbox = QMessageBox()
-            msgbox.setWindowTitle('Merging Results')
-            msgbox.setText('DONE!\t\t\t\t')
+            msgbox.setWindowTitle('Merge Results')
+            msgbox.setIcon(QMessageBox.Information)
+            msgbox.setText('Done.\t\t')
             msgbox.exec_()
 
     def handle_expand(self, item_clicked: QTreeWidgetItem, value_override=None):
@@ -317,7 +319,7 @@ class ProfileMergerUI(QMainWindow):
                     value = not item.item_disabled
                 item_clicked.child(index).item_disabled = value
 
-    def addItems(self, package: dict):
+    def add_items(self, package: dict):
         if self.list_target:
             merged_dict = GlobalVars.Merged.PROPERTIES
 
@@ -402,7 +404,7 @@ class ProfileMergerUI(QMainWindow):
             print(f'TARGET: {len(GlobalVars.Target.PROPERTIES.keys())}')
             print(f'MERGED: {len(GlobalVars.Merged.PROPERTIES.keys())}')
 
-    def syncScroll(self, value):
+    def sync_scroll(self, value):
         self.ui.list_source.verticalScrollBar().setValue(value)
         self.ui.list_target.verticalScrollBar().setValue(value)
         self.ui.list_merged.verticalScrollBar().setValue(value)

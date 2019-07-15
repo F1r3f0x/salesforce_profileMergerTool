@@ -250,7 +250,7 @@ class Ui_MainWindow(object):
         self.accionPlaceHolder.setText(QtWidgets.QApplication.translate("MainWindow", "TODO", None, -1))
         self.actionAbout.setText(QtWidgets.QApplication.translate("MainWindow", "About", None, -1))
         self.actionMerge.setText(QtWidgets.QApplication.translate("MainWindow", "Merge", None, -1))
-        self.actionMerge.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+M", None, -1))
+        self.actionMerge.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+S", None, -1))
         self.actionExpand_All.setText(QtWidgets.QApplication.translate("MainWindow", "Expand All", None, -1))
         self.actionExpand_All.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+E", None, -1))
         self.actionCollapse_All.setText(QtWidgets.QApplication.translate("MainWindow", "Collapse All", None, -1))
