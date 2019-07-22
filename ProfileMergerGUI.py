@@ -16,7 +16,7 @@ from xml.dom import minidom
 from pprint import pprint
 
 # qt
-from PySide2 import QtCore
+from PySide2 import QtCore, QtGui
 from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QMessageBox
 import qdarkstyle
@@ -165,17 +165,10 @@ class ProfileMergerUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
-        ui = self.ui
-        ui.setupUi(self)
-
+        self.ui.setupUi(self)
+        
         # Properties
         self.lastItem = None
-
-        # Fill filter cmb
-        self.ui.cmb_filter.clear()
-        self.ui.cmb_filter.addItem('All')
-        for model_name in models.classes_by_modelName.keys():
-            self.ui.cmb_filter.addItem(model_name)
 
         # Clear listwidgets
         self.ui.list_source.clear()
@@ -184,10 +177,10 @@ class ProfileMergerUI(QMainWindow):
 
         # Connect buttons
         self.ui.btn_source.clicked.connect(
-            lambda: self.find_profile_file(ui.le_source, GlobalVars.FROM_SOURCE, ui.list_source)
+            lambda: self.find_profile_file(self.ui.le_source, GlobalVars.FROM_SOURCE, self.ui.list_source)
         )
         self.ui.btn_target.clicked.connect(
-            lambda: self.find_profile_file(ui.le_target, GlobalVars.FROM_TARGET, ui.list_target)
+            lambda: self.find_profile_file(self.ui.le_target, GlobalVars.FROM_TARGET, self.ui.list_target)
         )
         self.ui.list_source.itemClicked.connect(self.item_clicked)
         self.ui.list_target.itemClicked.connect(self.item_clicked)
@@ -215,6 +208,18 @@ class ProfileMergerUI(QMainWindow):
 
         # QoL Stuff
         self.setWindowState(QtCore.Qt.WindowMaximized)
+
+        # Apply StyleSheets
+        stylesheet_a = ''
+        with open('ui/qss/AStyle.scss', 'r') as fh:
+            stylesheet_a = fh.read()
+        
+        stylesheet_b = ''
+        with open('ui/qss/BStyle.scss', 'r') as fh:
+            stylesheet_b = fh.read()
+
+        self.ui.btn_applyA.setStyleSheet(stylesheet_a)
+        self.ui.btn_applyB.setStyleSheet(stylesheet_b)
 
     def save_merged_profile(self):
         file_path, _filter = QFileDialog.getSaveFileName(

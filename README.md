@@ -25,3 +25,9 @@ Tool to help keep profiles extracted with Metadata API sincronized between branc
             python ProfileMergerGUI.py
 
 ![ss1](docs/imgs/show1.png)
+
+<hr>
+<hr>
+
+## Borrowed Stuff
+* Icons: https://github.com/feathericons/feather
