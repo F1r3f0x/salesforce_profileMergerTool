@@ -1,0 +1,28 @@
+QToolButton#btn_applyA {
+    background-color: #ffaa00;
+}
+
+QLabel#lbl_source {
+    background-color: #ffaa00;
+    border: 1px solid #32414b;
+    border-radius: 4px;
+}
+
+QTreeWidget#list_source QHeaderView::section {
+    background-color: #ffaa00;
+}
+
+
+QToolButton#btn_applyB {
+    background-color: #aa00ff;
+}
+
+QLabel#lbl_target {
+    background-color: #aa00ff;
+    border: 1px solid #32414b;
+    border-radius: 4px;
+}
+
+QTreeWidget#list_target QHeaderView::section {
+    background-color: #aa00ff;
+}

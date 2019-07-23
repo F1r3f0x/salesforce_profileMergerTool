@@ -23,6 +23,7 @@ import qdarkstyle
 
 # mine
 from ui import Ui_MainWindow, UiProfileItem
+from ui import main_stylesheet
 import models
 import utils
 
@@ -208,18 +209,6 @@ class ProfileMergerUI(QMainWindow):
 
         # QoL Stuff
         self.setWindowState(QtCore.Qt.WindowMaximized)
-
-        # Apply StyleSheets
-        stylesheet_a = ''
-        with open('ui/qss/AStyle.scss', 'r') as fh:
-            stylesheet_a = fh.read()
-        
-        stylesheet_b = ''
-        with open('ui/qss/BStyle.scss', 'r') as fh:
-            stylesheet_b = fh.read()
-
-        self.ui.btn_applyA.setStyleSheet(stylesheet_a)
-        self.ui.btn_applyB.setStyleSheet(stylesheet_b)
 
     def save_merged_profile(self):
         file_path, _filter = QFileDialog.getSaveFileName(
@@ -481,4 +470,8 @@ if __name__ == "__main__":
 
     window = ProfileMergerUI()
     window.show()
+    
+    #Apply my styling
+    window.setStyleSheet(main_stylesheet)
+
     sys.exit(app.exec_())
