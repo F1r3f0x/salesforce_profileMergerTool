@@ -167,48 +167,69 @@ class ProfileMergerUI(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
+
         # Properties
         self.lastItem = None
 
-        # Clear listwidgets
+        # Set initial state
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.ui.list_source.clear()
         self.ui.list_target.clear()
         self.ui.list_merged.clear()
 
-        # Connect buttons
+        ## Connect UI
+
+        # Buttons
         self.ui.btn_source.clicked.connect(
-            lambda: self.find_profile_file(self.ui.le_source, GlobalVars.FROM_SOURCE, self.ui.list_source)
+            lambda: self.find_profile_file(
+                self.ui.le_source, GlobalVars.FROM_SOURCE, self.ui.list_source
+            )
         )
         self.ui.btn_target.clicked.connect(
-            lambda: self.find_profile_file(self.ui.le_target, GlobalVars.FROM_TARGET, self.ui.list_target)
+            lambda: self.find_profile_file(
+                self.ui.le_target, GlobalVars.FROM_TARGET, self.ui.list_target
+            )
         )
+        self.ui.btn_start.clicked.connect(self.save_merged_profile)
+        self.ui.btn_expandAll.clicked.connect(lambda: ProfileMergerUI.do_set_expand_all(True))
+        self.ui.btn_collapseAll.clicked.connect(lambda: ProfileMergerUI.do_set_expand_all(False))
+
+        # Tree Widgets
         self.ui.list_source.itemClicked.connect(self.item_clicked)
         self.ui.list_target.itemClicked.connect(self.item_clicked)
         self.ui.list_merged.itemClicked.connect(self.merged_item_clicked)
-
         self.ui.list_source.itemExpanded.connect(self.handle_expand)
         self.ui.list_target.itemExpanded.connect(self.handle_expand)
         self.ui.list_merged.itemExpanded.connect(self.handle_expand)
         self.ui.list_source.itemCollapsed.connect(self.handle_expand)
         self.ui.list_target.itemCollapsed.connect(self.handle_expand)
         self.ui.list_merged.itemCollapsed.connect(self.handle_expand)
-
-        self.ui.actionExpand_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(True))
-        self.ui.actionCollapse_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(False))
-        self.ui.actionMerge.triggered.connect(self.save_merged_profile)
-
         self.ui.list_source.verticalScrollBar().valueChanged.connect(self.sync_scroll)
         self.ui.list_target.verticalScrollBar().valueChanged.connect(self.sync_scroll)
         self.ui.list_merged.verticalScrollBar().valueChanged.connect(self.sync_scroll)
-        self.ui.btn_start.clicked.connect(self.save_merged_profile)
+
+        # Actions
+        self.ui.actionExpand_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(True))
+        self.ui.actionCollapse_All.triggered.connect(lambda: ProfileMergerUI.do_set_expand_all(False))
+        self.ui.actionMerge.triggered.connect(self.save_merged_profile)
+        self.ui.actionOpenProfileA.triggered.connect(
+            lambda: self.find_profile_file(
+                self.ui.le_source, GlobalVars.FROM_SOURCE, self.ui.list_source
+                )
+        )
+        self.ui.actionOpenProfileB.triggered.connect(
+            lambda: self.find_profile_file(
+                self.ui.le_target, GlobalVars.FROM_TARGET, self.ui.list_target
+            )
+        )
 
         # Worker Instance
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.add_items)
 
-        # QoL Stuff
-        self.setWindowState(QtCore.Qt.WindowMaximized)
+        # TODO
+        self.ui.actionApplyAvalues.setEnabled(False)
+        self.ui.actionApplyBValues.setEnabled(False)
 
     def save_merged_profile(self):
         file_path, _filter = QFileDialog.getSaveFileName(
@@ -280,7 +301,6 @@ class ProfileMergerUI(QMainWindow):
                 parent_row = self.ui.list_target.indexOfTopLevelItem(parent_item)
                 child_row = parent_item.indexOfChild(item_clicked)
             else:
-                # what in the fuck are you doing here
                 return
 
             parent_merged_item = self.ui.list_merged.topLevelItem(parent_row)
@@ -375,11 +395,11 @@ class ProfileMergerUI(QMainWindow):
                     self.ui.list_merged.addTopLevelItem(item)
 
                     ProfileMergerUI.replicate_item(
-                        GlobalVars.Target.PROPERTIES, 
+                        GlobalVars.Target.PROPERTIES,
                         GlobalVars.categories_items_target[model_type], self.ui.list_target, key
                     )
                     ProfileMergerUI.replicate_item(
-                        GlobalVars.Source.PROPERTIES, 
+                        GlobalVars.Source.PROPERTIES,
                         GlobalVars.categories_items_source[model_type], self.ui.list_source, key
                     )
 
@@ -470,8 +490,8 @@ if __name__ == "__main__":
 
     window = ProfileMergerUI()
     window.show()
-    
-    #Apply my styling
+
+    # Apply my styling
     window.setStyleSheet(main_stylesheet)
 
     sys.exit(app.exec_())
