@@ -46,6 +46,8 @@ class GlobalEstate:
     FROM_B = 'B'
     FROM_MERGED = 'AB'
 
+    MERGE_A_TO_B = False
+
     categories_items_a = None
     categories_items_b = None
     categories_items_merged = None
@@ -69,29 +71,29 @@ class GlobalEstate:
 
 
 class ProfileScanner(QtCore.QThread):
-    """Profile Field as a QTreeWidgetItem.
-
-    It contains styling to signal its status and a reference to the field type object
+    """QThread to process profile, create the models and add the items to the interface.
 
     Attributes:
         profile_filepath (str): Path to the profile file
         from_profile (str): Internal profile name to fill
 
     [QT] Signals:
-        addItems
+        addItems (bool): Signal to start adding items
     """
-    addItems = QtCore.Signal(dict)
+    addItems = QtCore.Signal(bool)
 
     def __init__(self):
         QtCore.QThread.__init__(self)
         self.profile_filepath = ''
         self.from_profile = ''
 
-    # Overloaded, is run by calling its start() function
     def run(self):
+        """
+            Overloaded, is run by calling its start() function
+        """
+        ##
         # Reset tables
         if (GlobalEstate.A_MERGED or GlobalEstate.B_MERGED):
-
             properties_rescan = {}
 
             if (len(GlobalEstate.A.PROPERTIES) > 0
@@ -107,6 +109,7 @@ class ProfileScanner(QtCore.QThread):
             GlobalEstate.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
                 GlobalEstate.Merged.PROPERTIES[key] = value
+        ##
 
         # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
@@ -116,7 +119,7 @@ class ProfileScanner(QtCore.QThread):
         namespace_pattern = '^{.*}'
         namespace_regex = re.compile(namespace_pattern)
 
-        tag, fields_dict = '', {}
+        tag = ''
         # Create ProfileItems with the profile
         for prof_field_element in tree_root:
             namespace = namespace_regex.match(prof_field_element.tag).group()
@@ -156,31 +159,44 @@ class ProfileScanner(QtCore.QThread):
 
                 _id = str(profile_field)
 
-                GlobalEstate.Merged.PROPERTIES[_id] = profile_field
-                fields_dict[_id] = profile_field
-
                 if self.from_profile == GlobalEstate.FROM_A:
                     GlobalEstate.A.PROPERTIES[_id] = profile_field
                 if self.from_profile == GlobalEstate.FROM_B:
                     GlobalEstate.B.PROPERTIES[_id] = profile_field
 
+        # Fill merged properties dict
+        properties_dicts = None
+        if GlobalEstate.MERGE_A_TO_B:
+            properties_dicts = [GlobalEstate.B.PROPERTIES, GlobalEstate.A.PROPERTIES]
+        else:
+            properties_dicts = [GlobalEstate.A.PROPERTIES, GlobalEstate.B.PROPERTIES]
+
+        for properties in properties_dicts:
+            for _id, profile_field in properties.items():
+                GlobalEstate.Merged.PROPERTIES[_id] = profile_field
+
+        # GlobalEstate.Merged.PROPERTIES[_id] = profile_field
+
         GlobalEstate.A_MERGED = len(GlobalEstate.A.PROPERTIES) > 0
         GlobalEstate.B_MERGED = len(GlobalEstate.B.PROPERTIES) > 0
 
-        self.addItems.emit({
-            'from': self.from_profile,  # with love from
-            'items': fields_dict
-        })
+        self.addItems.emit(True)
 
 
 class ProfileMergerUI(QMainWindow):
+    """ Profile Merger main class
+
+    Attributes:
+        ui (MainWindow): class that has all the Qt ui components and the layout.
+        tree_target: target QTreeWidget to fill with items after an addItems signal from
+            Profile Scanner.
+    """
     def __init__(self):
         super().__init__()
 
         ##
         # Class Attributes
         self.ui = Ui_MainWindow()
-        self.lastItem = None
         self.tree_target = None
         ##
 
@@ -223,6 +239,7 @@ class ProfileMergerUI(QMainWindow):
         self.ui.btn_collapseAll.clicked.connect(
             lambda: ProfileMergerUI.expand_all_categories(False)
         )
+        self.ui.btn_merge_dir.clicked.connect(self.change_merge_direction)
 
         # Connect Actions
         self.ui.actionExpand_All.triggered.connect(
@@ -356,7 +373,15 @@ class ProfileMergerUI(QMainWindow):
                     value = not item.item_disabled
                 item_clicked.child(index).item_disabled = value
 
-    def add_items(self, package: dict):
+    def change_merge_direction(self, a_to_b=None):
+        if a_to_b is not None:
+            GlobalEstate.MERGE_A_TO_B = not GlobalEstate.MERGE_A_TO_B
+        else:
+            GlobalEstate.MERGE_A_TO_B = a_to_b
+        print(a_to_b)
+        print('NEW A_TO_B:', GlobalEstate.MERGE_A_TO_B)
+
+    def add_items(self, state: bool):
         if self.tree_target:
             merged_dict = GlobalEstate.Merged.PROPERTIES
 
