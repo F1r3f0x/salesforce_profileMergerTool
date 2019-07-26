@@ -38,6 +38,7 @@ class GlobalEstate:
         FROM_A (str): Is from A
         FROM_B (str): Is from B
         FROM_MERGED (str): Is from merged
+        MERGE_A_TO_B (bool): Values from A take preference while merging.
     """
     A_MERGED = False
     B_MERGED = False
@@ -272,6 +273,8 @@ class ProfileMergerUI(QMainWindow):
     ##
     # Instance Methods
     def save_merged_profile(self):
+        """Picks a path and saves the merged profile to it.
+        """
         file_path, _filter = QFileDialog.getSaveFileName(
             self,
             'Save your Profile file',
@@ -279,11 +282,13 @@ class ProfileMergerUI(QMainWindow):
             '*.xml *.profile'
         )
 
+        # If a path was selected
         if file_path != '':
             xml_root = ElementTree.Element(
                 'Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'}
             )
 
+            # Goes through the merged profile and fills the xml
             for model_field in sorted(
                 GlobalEstate.Merged.PROPERTIES.values(), key=lambda x: x.model_name + str(x)
             ):
@@ -305,13 +310,16 @@ class ProfileMergerUI(QMainWindow):
                             c = ElementTree.SubElement(xml_root, model_field.model_name)
                             c.text = value
 
+            # Get the xml as a String and then prettyfies it
             xml_str = ElementTree.tostring(xml_root, 'utf-8')
             reparsed = minidom.parseString(xml_str)
             xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
+            # Write to the selected path
             with open(file_path, 'w', encoding='utf-8') as file_pointer:
                 file_pointer.write(xml_str)
 
+            # Show result
             msgbox = QMessageBox()
             msgbox.setWindowTitle('Merge Results')
             msgbox.setIcon(QMessageBox.Information)
@@ -319,6 +327,12 @@ class ProfileMergerUI(QMainWindow):
             msgbox.exec_()
 
     def handle_expand(self, item_clicked: QTreeWidgetItem, value_override=None):
+        """Syncs the expand and collapse of categories of the QTrees.
+
+        Args:
+            item_clicked (QTreeWidgetItem): Item that was clicked in the QTree, comes from a Signal.
+            value_override (bool): (Optional)
+        """
         is_expanded = item_clicked.isExpanded()
         tree_widget = item_clicked.treeWidget()
         index = tree_widget.indexOfTopLevelItem(item_clicked)
@@ -328,6 +342,12 @@ class ProfileMergerUI(QMainWindow):
         self.ui.tree_merged.topLevelItem(index).setExpanded(is_expanded)
 
     def item_clicked(self, item_clicked: QTreeWidgetItem):
+        """Handle left click for the A and B QTrees.
+            - If it's an item, update the merged item with the clicked item value.
+
+        Args:
+            item_clicked (QTreeWidgetItem): Item that was clicked in the QTree, comes from a Signal.
+        """
         if type(item_clicked) is UiProfileItem:
             parent_item = None
             parent_row = None
@@ -355,6 +375,14 @@ class ProfileMergerUI(QMainWindow):
         item_clicked.setSelected(False)
 
     def merged_item_clicked(self, item_clicked: QTreeWidgetItem):
+        """Handle left click for the merged QTree.
+            - If it's an item, disable it.
+            - If it's a category, disable all the childs
+
+        Args:
+            item_clicked (QTreeWidgetItem): Item that was clicked in the QTree, comes from a Signal.
+        """
+        # Is an item
         if type(item_clicked) is UiProfileItem:
             disabled = item_clicked.item_disabled
             if hasattr(item_clicked, 'item_disabled'):
@@ -365,6 +393,7 @@ class ProfileMergerUI(QMainWindow):
                 else:
                     item_clicked.item_disabled = not disabled
             item_clicked.setSelected(False)
+        # Is a category
         else:
             value = False
             for index in range(item_clicked.childCount()):
@@ -374,6 +403,11 @@ class ProfileMergerUI(QMainWindow):
                 item_clicked.child(index).item_disabled = value
 
     def change_merge_direction(self, a_to_b=None):
+        """Toggle or change the merge direction
+
+        Args:
+            a_to_b (bool): (Optional) sets the merge direction.
+        """
         if a_to_b is not None:
             GlobalEstate.MERGE_A_TO_B = not GlobalEstate.MERGE_A_TO_B
         else:
@@ -426,14 +460,12 @@ class ProfileMergerUI(QMainWindow):
                             ProfileMergerUI.replicate_item(
                                 GlobalEstate.B.PROPERTIES,
                                 GlobalEstate.categories_items_b[model_type],
-                                self.ui.tree_b,
                                 key,
                                 toggle_name
                             )
                             ProfileMergerUI.replicate_item(
                                 GlobalEstate.A.PROPERTIES,
                                 GlobalEstate.categories_items_a[model_type],
-                                self.ui.tree_a,
                                 key,
                                 toggle_name
                             )
@@ -471,6 +503,11 @@ class ProfileMergerUI(QMainWindow):
             print(f'MERGED: {len(GlobalEstate.Merged.PROPERTIES.keys())}')
 
     def sync_scroll(self, value):
+        """Syncs the scrollbar of the QTreeWidgets.
+
+        Args:
+            value (int): Index to set the scrollbar, comes from a signal.
+        """
         self.ui.tree_a.verticalScrollBar().setValue(value)
         self.ui.tree_b.verticalScrollBar().setValue(value)
         self.ui.tree_merged.verticalScrollBar().setValue(value)
@@ -509,29 +546,45 @@ class ProfileMergerUI(QMainWindow):
     ##
     # Static Methods
     def replicate_item(
-        global_dict, parent_item: QTreeWidgetItem, ui_list: QTreeWidget, key, toggle_name=None
+        global_dict, parent_item: QTreeWidgetItem, profile_field_id, toggle_name=None
     ):
-        if global_dict.get(key):
-            model_obj = global_dict[key]
+        """Replicates a UiProfileItem below a parent_item (category) for the A or B QTrees,
+        if the item is not found on the current list it generates an empty item for spacing.
+
+        Args:
+            global_dict (dict): Dict with the profile's properties
+            parent_item (QTreeWidgetItem): Category item that will hold the replicated item
+            profile_field_id (str): Id of the field
+            toggle_name (str): Name of the toggable value if it's a toggle.
+        """
+        if global_dict.get(profile_field_id):
+            profile_field = global_dict[profile_field_id]
             if toggle_name is not None:
-                # Get the value from the item, not the merged list
-                toggle_value = model_obj.toggles[toggle_name]
+                # Get the value from the profile field, not the merged list
+                toggle_value = profile_field.toggles[toggle_name]
 
                 item = UiProfileItem(
-                    model_obj, parent_item, toggle_name=toggle_name, toggle_value=toggle_value
+                    profile_field, parent_item, toggle_name=toggle_name, toggle_value=toggle_value
                 )
-            elif type(model_obj) is models.ProfileSingleValue and type(model_obj.value) is bool:
+            elif (type(profile_field) is models.ProfileSingleValue
+                    and type(profile_field.value) is bool):
                 item = UiProfileItem(
-                    model_obj, parent_item, toggle_value=model_obj.value
+                    profile_field, parent_item, toggle_value=profile_field.value
                 )
 
             else:
-                item = UiProfileItem(model_obj, parent_item)
+                item = UiProfileItem(profile_field, parent_item)
         else:
             item = QTreeWidgetItem(parent_item)
             item.setText(0, '')
+        item = None  # remove ref
 
     def expand_all_categories(expand: bool):
+        """ Expand or Collapses all the categories
+
+        Args:
+            expand (bool): Expand the categories or collpase them?
+        """
         categories_lists = [
             GlobalEstate.categories_items_a.values(),
             GlobalEstate.categories_items_b.values(),
@@ -542,6 +595,7 @@ class ProfileMergerUI(QMainWindow):
             for item in item_list:
                 item.setExpanded(expand)
     ##
+
 
 if __name__ == "__main__":
     app = QApplication([])
