@@ -208,12 +208,9 @@ class ProfileMergerUI(QMainWindow):
 
         ##
         # Set initial state
-        self.setWindowState(Qt.WindowMaximized)
-        
         # Get Stylesheets
         qss_dir = 'ui/'
         filename_stylesheet = 'stylesheet.css'
-
         try:
             with open(f'{qss_dir}{filename_stylesheet}', 'r') as fh:
                 self.main_stylesheet = fh.read()
@@ -224,6 +221,9 @@ class ProfileMergerUI(QMainWindow):
         # Icons
         self.icon_b_to_a.addPixmap(QPixmap("ui/icons/arrow-left.svg"), QIcon.Normal, QIcon.Off)
         self.icon_a_to_b.addPixmap(QPixmap("ui/icons/arrow-right.svg"), QIcon.Normal, QIcon.Off)
+
+        self.setWindowState(Qt.WindowMaximized)
+        self.change_merge_direction(False)
         ##
 
         # Setup Tree Widgets
@@ -429,8 +429,14 @@ class ProfileMergerUI(QMainWindow):
             GlobalEstate.MERGE_A_TO_B = not GlobalEstate.MERGE_A_TO_B
         else:
             GlobalEstate.MERGE_A_TO_B = a_to_b
-        print(a_to_b)
-        print('NEW A_TO_B:', GlobalEstate.MERGE_A_TO_B)
+
+        if GlobalEstate.MERGE_A_TO_B:
+            self.ui.btn_merge_dir.setIcon(self.icon_a_to_b)
+        else:
+            self.ui.btn_merge_dir.setIcon(self.icon_b_to_a)
+
+    def apply_all_values(self, from_profile: str):
+        pass
 
     def add_items(self, state: bool):
         if self.tree_target:
@@ -556,6 +562,10 @@ class ProfileMergerUI(QMainWindow):
             file_name = file_path.split('/')[-1].replace('.profile', '')
 
             tree_target.setHeaderLabel(file_name)
+            if from_profile == GlobalEstate.FROM_A:
+                self.ui.btn_close_a.setEnabled(True)
+            if from_profile == GlobalEstate.FROM_B:
+                self.ui.btn_close_b.setEnabled(True)
 
         return file_path
     ##

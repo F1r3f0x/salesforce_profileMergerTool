@@ -26,3 +26,7 @@ QLabel#lbl_b {
 QTreeWidget#tree_b QHeaderView::section {
     background-color: #aa00ff;
 }
+
+QToolButton::disabled {
+    background-color: #6A6A6A;
+}
