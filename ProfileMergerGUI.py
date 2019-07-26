@@ -16,15 +16,14 @@ from xml.dom import minidom
 from pprint import pprint
 
 # qt
-from PySide2 import QtCore
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QMessageBox
+from PySide2.QtCore import Qt, QThread, Signal
+from PySide2.QtWidgets import QMainWindow, QApplication, QLineEdit, QFileDialog, QMessageBox
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide2.QtGui import QIcon, QPixmap
 import qdarkstyle
 
 # mine
 from ui import Ui_MainWindow, UiProfileItem
-from ui import main_stylesheet
 import models
 import utils
 
@@ -71,7 +70,7 @@ class GlobalEstate:
         merged = {}
 
 
-class ProfileScanner(QtCore.QThread):
+class ProfileScanner(QThread):
     """QThread to process profile, create the models and add the items to the interface.
 
     Attributes:
@@ -81,10 +80,10 @@ class ProfileScanner(QtCore.QThread):
     [QT] Signals:
         addItems (bool): Signal to start adding items
     """
-    addItems = QtCore.Signal(bool)
+    addItems = Signal(bool)
 
-    def __init__(self):
-        QtCore.QThread.__init__(self)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.profile_filepath = ''
         self.from_profile = ''
 
@@ -199,6 +198,9 @@ class ProfileMergerUI(QMainWindow):
         # Class Attributes
         self.ui = Ui_MainWindow()
         self.tree_target = None
+        self.main_stylesheet = None
+        self.icon_a_to_b = QIcon()
+        self.icon_b_to_a = QIcon()
         ##
 
         # Setup UI class generated with QTCreator
@@ -206,7 +208,22 @@ class ProfileMergerUI(QMainWindow):
 
         ##
         # Set initial state
-        self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.setWindowState(Qt.WindowMaximized)
+        
+        # Get Stylesheets
+        qss_dir = 'ui/'
+        filename_stylesheet = 'stylesheet.css'
+
+        try:
+            with open(f'{qss_dir}{filename_stylesheet}', 'r') as fh:
+                self.main_stylesheet = fh.read()
+                self.setStyleSheet(self.main_stylesheet)
+        except FileNotFoundError:
+            print(f'{qss_dir}{filename_stylesheet} not found!')
+
+        # Icons
+        self.icon_b_to_a.addPixmap(QPixmap("ui/icons/arrow-left.svg"), QIcon.Normal, QIcon.Off)
+        self.icon_a_to_b.addPixmap(QPixmap("ui/icons/arrow-right.svg"), QIcon.Normal, QIcon.Off)
         ##
 
         # Setup Tree Widgets
@@ -602,11 +619,11 @@ if __name__ == "__main__":
 
     # Setup Style
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
-
+    
     window = ProfileMergerUI()
+
     window.show()
 
     # Apply my styling
-    window.setStyleSheet(main_stylesheet)
 
     sys.exit(app.exec_())
