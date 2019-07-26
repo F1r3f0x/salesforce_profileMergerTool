@@ -621,9 +621,6 @@ if __name__ == "__main__":
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
     
     window = ProfileMergerUI()
-
     window.show()
-
-    # Apply my styling
 
     sys.exit(app.exec_())
