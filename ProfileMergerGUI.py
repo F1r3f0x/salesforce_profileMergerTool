@@ -87,12 +87,7 @@ class ProfileScanner(QThread):
         self.profile_filepath = ''
         self.from_profile = ''
 
-    def run(self):
-        """
-            Overloaded, is run by calling its start() function
-        """
-        ##
-        # Reset tables
+    def reset_tables(self):
         if (GlobalEstate.A_MERGED or GlobalEstate.B_MERGED):
             properties_rescan = {}
 
@@ -109,7 +104,14 @@ class ProfileScanner(QThread):
             GlobalEstate.Merged.PROPERTIES = {}
             for key, value in properties_rescan.items():
                 GlobalEstate.Merged.PROPERTIES[key] = value
+
+    def run(self):
+        """
+            Overloaded, is run by calling its start() function
+        """
         ##
+        # Reset tables
+        self.reset_tables()
 
         # Loop through profile XML
         tree = ElementTree.parse(self.profile_filepath)
@@ -283,6 +285,12 @@ class ProfileMergerUI(QMainWindow):
         )
         self.ui.btn_applyB.clicked.connect(
             lambda: self.apply_all_values(GlobalEstate.FROM_B)
+        )
+        self.ui.btn_close_a.clicked.connect(
+            lambda: self.close_profile(GlobalEstate.FROM_A)
+        )
+        self.ui.btn_close_b.clicked.connect(
+            lambda: self.close_profile(GlobalEstate.FROM_B)
         )
         ##
 
@@ -481,7 +489,6 @@ class ProfileMergerUI(QMainWindow):
 
             # Fill merged list
             for key in sorted(merged_dict.keys()):
-                print(key)
                 model_obj = merged_dict[key]
                 model_type = model_obj.model_name
                 model_name = model_obj.model_id
@@ -548,6 +555,8 @@ class ProfileMergerUI(QMainWindow):
                     if item.childCount() > 0:
                         tree_widget.addTopLevelItem(item)
 
+            ProfileMergerUI.expand_all_categories(True)
+
             print(f'SOURCE: {len(GlobalEstate.A.PROPERTIES.keys())}')
             print(f'TARGET: {len(GlobalEstate.B.PROPERTIES.keys())}')
             print(f'MERGED: {len(GlobalEstate.Merged.PROPERTIES.keys())}')
@@ -589,12 +598,44 @@ class ProfileMergerUI(QMainWindow):
             file_name = file_path.split('/')[-1].replace('.profile', '')
 
             tree_target.setHeaderLabel(file_name)
+
             if from_profile == GlobalEstate.FROM_A:
                 self.ui.btn_close_a.setEnabled(True)
             if from_profile == GlobalEstate.FROM_B:
                 self.ui.btn_close_b.setEnabled(True)
 
-        return file_path
+    def close_profile(self, from_profile: str):
+        if from_profile == GlobalEstate.FROM_A:
+            self.tree_target = self.ui.tree_a
+            self.ui.le_a.setText('')
+            GlobalEstate.A.PROPERTIES.clear()
+            GlobalEstate.A_MERGED = False
+            other_from = GlobalEstate.FROM_B
+            reset_other_path = self.ui.le_b.text()
+            self.ui.btn_close_a.setEnabled(False)
+        else:
+            self.tree_target = self.ui.tree_b
+            self.ui.le_b.setText('')
+            GlobalEstate.B.PROPERTIES.clear()
+            GlobalEstate.B_MERGED = False
+            other_from = GlobalEstate.FROM_A
+            reset_other_path = self.ui.le_a.text()
+            self.ui.btn_close_b.setEnabled(False)
+
+        self.clear_trees()
+        GlobalEstate.Merged.PROPERTIES.clear()
+        GlobalEstate.Items.merged.clear()
+        self.tree_target.setHeaderLabel(f'Profile {from_profile}')
+
+        if reset_other_path:
+            self.scanner_worker.profile_filepath = reset_other_path
+            self.scanner_worker.from_profile = other_from
+            self.scanner_worker.start()
+
+    def clear_trees(self):
+        all_tree_widgets = [self.ui.tree_a, self.ui.tree_b, self.ui.tree_merged]
+        for tree in all_tree_widgets:
+            tree.clear()
     ##
 
     ##
