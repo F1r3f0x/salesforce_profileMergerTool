@@ -13,7 +13,7 @@ import sys
 import re
 from xml.etree import ElementTree
 from xml.dom import minidom
-from pprint import pprint
+# from pprint import pprint
 
 # qt
 from PySide2.QtCore import Qt, QThread, Signal
@@ -290,6 +290,10 @@ class ProfileMergerUI(QMainWindow):
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.add_items)
 
+        # TODO
+        self.ui.btn_applyA.setEnabled(False)
+        self.ui.btn_applyB.setEnabled(False)
+
     ##
     # Instance Methods
     def save_merged_profile(self):
@@ -438,6 +442,7 @@ class ProfileMergerUI(QMainWindow):
         else:
             self.ui.btn_merge_dir.setIcon(self.icon_b_to_a)
 
+    """
     def apply_all_values(self, from_profile: str):
         if from_profile == GlobalEstate.FROM_A:
             fields_to_apply = GlobalEstate.A.PROPERTIES
@@ -448,7 +453,7 @@ class ProfileMergerUI(QMainWindow):
 
         for item in items:
             pprint(item.__dict__)
-
+    """
 
     def add_items(self, state: bool):
         if self.tree_target:
@@ -510,7 +515,10 @@ class ProfileMergerUI(QMainWindow):
 
                     GlobalEstate.Items.merged[model_name] = item_group
                 else:
-                    item = UiProfileItem(model_obj, GlobalEstate.categories_items_merged[model_type])
+                    item = UiProfileItem(
+                        model_obj,
+                        GlobalEstate.categories_items_merged[model_type]
+                    )
                     if hasattr(model_obj, 'value'):
                         item.toggle_value = model_obj.value
                     GlobalEstate.Items.merged[model_name] = item
@@ -592,7 +600,7 @@ class ProfileMergerUI(QMainWindow):
     ##
     # Static Methods
     def replicate_item(
-        global_dict: dict, item_list:list, parent_item: QTreeWidgetItem, profile_field_id: str,
+        global_dict: dict, item_list: list, parent_item: QTreeWidgetItem, profile_field_id: str,
         toggle_name=None
     ):
         """Replicates a UiProfileItem below a parent_item (category) for the A or B QTrees,

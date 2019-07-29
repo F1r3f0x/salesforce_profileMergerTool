@@ -245,7 +245,6 @@ class ProfileCustomPermissions(ProfileFieldType):
         self.model_name = 'customPermissions'
         self.__set_id__()
 
-
     @property
     def enabled(self):
         return self.__enabled
@@ -699,6 +698,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
     def __set_id__(self):
         self.model_id = f'{self.recordType}'
+
 
 class ProfileTabVisibility(ProfileFieldType):
     def __init__(self, tab='', visibility='', api_version=DEFAULT_API_VERSION):

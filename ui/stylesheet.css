@@ -1,5 +1,14 @@
+/* General */
+QToolButton::disabled {
+    background-color: #6A6A6A;
+}
+
+/* A */
 QToolButton#btn_applyA {
     background-color: #ffaa00;
+}
+QToolButton#btn_applyA::disabled {
+    background-color: #6A6A6A;
 }
 
 QLabel#lbl_a {
@@ -13,8 +22,12 @@ QTreeWidget#tree_a QHeaderView::section {
 }
 
 
+/* B */
 QToolButton#btn_applyB {
     background-color: #aa00ff;
+}
+QToolButton#btn_applyB::disabled {
+    background-color: #6A6A6A;
 }
 
 QLabel#lbl_b {
@@ -25,8 +38,4 @@ QLabel#lbl_b {
 
 QTreeWidget#tree_b QHeaderView::section {
     background-color: #aa00ff;
-}
-
-QToolButton::disabled {
-    background-color: #6A6A6A;
 }
