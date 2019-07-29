@@ -44,7 +44,7 @@ class UiProfileItem(QTreeWidgetItem):
         toggle_name=None, toggle_value=None
     ):
         super().__init__(*args)
-        self.id = str(model_ref)
+        self.id = model_ref.model_id
         self.model_ref = model_ref
         self.model_ref.model_disabled = disabled
         self.toggle_name = toggle_name

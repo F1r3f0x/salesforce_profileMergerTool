@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>Patricio Labin @F1r3f0x</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
@@ -19,7 +20,7 @@
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="layout_main">
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -152,131 +153,365 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="layout_source">
+     <layout class="QHBoxLayout" name="layout_profiles" stretch="0,0,0">
       <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="lbl_source">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <layout class="QHBoxLayout" name="layout_a">
+        <property name="spacing">
+         <number>6</number>
         </property>
-        <property name="minimumSize">
+        <item>
+         <widget class="QLabel" name="lbl_a">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Profile A</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="le_a">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_close_a">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/x.svg</normaloff>icons/x.svg</iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_a">
+          <property name="statusTip">
+           <string>Load Profile A</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btn_merge_dir">
+        <property name="maximumSize">
          <size>
-          <width>108</width>
-          <height>0</height>
+          <width>16777215</width>
+          <height>25</height>
          </size>
         </property>
-        <property name="text">
-         <string>Profile A (Source):</string>
+        <property name="toolTip">
+         <string>This will determine which profile values will take priority while merging</string>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="le_source">
-        <property name="enabled">
-         <bool>true</bool>
+        <property name="statusTip">
+         <string>Change merge direction</string>
         </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="btn_source">
         <property name="text">
          <string>...</string>
         </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/arrow-left.svg</normaloff>icons/arrow-left.svg</iconset>
+        </property>
        </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="layout_b">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QToolButton" name="btn_b">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="statusTip">
+           <string>Load Profile B</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_close_b">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/x.svg</normaloff>icons/x.svg</iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="le_b">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="echoMode">
+           <enum>QLineEdit::Normal</enum>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_b">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Profile B</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="layout_selector">
-      <property name="spacing">
-       <number>7</number>
+     <layout class="QGridLayout" name="layout_merger" rowstretch="0,0">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <item>
-       <widget class="QLabel" name="lbl_target">
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item row="1" column="3">
+       <widget class="QTreeWidget" name="tree_b">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>108</width>
-          <height>0</height>
-         </size>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
-        <property name="text">
-         <string>Profile B (Target):</string>
+        <property name="statusTip">
+         <string>[Left Click] to merge Profile B value</string>
         </property>
+        <property name="dragEnabled">
+         <bool>false</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>Profile B</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
+        </column>
        </widget>
       </item>
-      <item>
-       <widget class="QLineEdit" name="le_target">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
+      <item row="1" column="1">
+       <widget class="QTreeWidget" name="tree_a">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="echoMode">
-         <enum>QLineEdit::Normal</enum>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
-        <property name="readOnly">
-         <bool>true</bool>
+        <property name="statusTip">
+         <string>[Left Click] to merge Profile A value</string>
         </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="dragEnabled">
+         <bool>false</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>Profile A</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
+        </column>
        </widget>
       </item>
-      <item>
-       <widget class="QToolButton" name="btn_target">
+      <item row="1" column="2">
+       <widget class="UiTreeWidget" name="tree_merged">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="text">
-         <string>...</string>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
+        <property name="statusTip">
+         <string>[Right Click] to toggle values | [Left Click] Ignore field in merge</string>
+        </property>
+        <column>
+         <property name="text">
+          <string>Profile Merged</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
+        </column>
        </widget>
+      </item>
+      <item row="0" column="2">
+       <layout class="QHBoxLayout" name="layout_treeButtons">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
+        <item>
+         <widget class="QToolButton" name="btn_applyA">
+          <property name="statusTip">
+           <string>Apply all A values</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normalon>icons/chevrons-right.svg</normalon>
+           </iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="spc_m_l">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_expandAll">
+          <property name="statusTip">
+           <string>Expand All Categories</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normalon>icons/maximize-2.svg</normalon>
+           </iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_collapseAll">
+          <property name="statusTip">
+           <string>Collapse All Categories</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normalon>icons/minimize-2.svg</normalon>
+           </iconset>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="scp_m_r">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btn_applyB">
+          <property name="statusTip">
+           <string>Apply all B values</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normalon>icons/chevrons-left.svg</normalon>
+           </iconset>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="layout_filter">
-      <item>
-       <widget class="QLabel" name="lbl_filter">
-        <property name="text">
-         <string>Permission Type:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="cmb_filter">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-       </widget>
-      </item>
+      <property name="spacing">
+       <number>6</number>
+      </property>
       <item>
        <spacer name="spc_filter">
         <property name="orientation">
@@ -296,105 +531,25 @@
       <item>
        <widget class="QPushButton" name="btn_start">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>96</width>
           <height>36</height>
          </size>
         </property>
         <property name="text">
-         <string>Merge!</string>
+         <string>Merge and Save</string>
         </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="fields_selector" rowstretch="0">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item row="0" column="0">
-       <widget class="QTreeWidget" name="list_source">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>[Left Click] to merge values</string>
-        </property>
-        <property name="dragEnabled">
-         <bool>false</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>Profile A</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="UiTreeWidget" name="list_merged">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>[Right Click] to toggle values</string>
-        </property>
-        <column>
-         <property name="text">
-          <string>Profile Merged</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QTreeWidget" name="list_target">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>[Left Click] to merge value</string>
-        </property>
-        <property name="dragEnabled">
-         <bool>false</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>Profile B</string>
-         </property>
-        </column>
        </widget>
       </item>
      </layout>
     </item>
    </layout>
-   <zorder></zorder>
    <zorder></zorder>
    <zorder></zorder>
    <zorder></zorder>
@@ -405,7 +560,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -424,6 +579,9 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionOpenProfileA"/>
+    <addaction name="actionOpenProfileB"/>
+    <addaction name="separator"/>
     <addaction name="actionMerge"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -433,8 +591,16 @@
     <addaction name="actionExpand_All"/>
     <addaction name="actionCollapse_All"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionApplyAvalues"/>
+    <addaction name="actionApplyBValues"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuSettings"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -448,6 +614,9 @@
    </property>
   </action>
   <action name="actionAbout">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
@@ -456,13 +625,19 @@
    <property name="text">
     <string>Merge</string>
    </property>
+   <property name="toolTip">
+    <string>Create merged profile and save</string>
+   </property>
    <property name="shortcut">
-    <string>Ctrl+M</string>
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionExpand_All">
    <property name="text">
     <string>Expand All</string>
+   </property>
+   <property name="toolTip">
+    <string>Expands all the categories</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>
@@ -472,8 +647,52 @@
    <property name="text">
     <string>Collapse All</string>
    </property>
+   <property name="toolTip">
+    <string>Collapses all the categories</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionApplyAvalues">
+   <property name="text">
+    <string>Apply A Values</string>
+   </property>
+   <property name="toolTip">
+    <string>Applies all the values from the profile A</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+1</string>
+   </property>
+  </action>
+  <action name="actionApplyBValues">
+   <property name="text">
+    <string>Apply B Values</string>
+   </property>
+   <property name="toolTip">
+    <string>Applies all the values from the profile B</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+2</string>
+   </property>
+  </action>
+  <action name="actionOpenProfileA">
+   <property name="text">
+    <string>Open Profile A</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
+  </action>
+  <action name="actionOpenProfileB">
+   <property name="text">
+    <string>Open Profile B</string>
+   </property>
+   <property name="toolTip">
+    <string>Open Profile B</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
    </property>
   </action>
  </widget>
@@ -486,7 +705,19 @@
  </customwidgets>
  <tabstops>
   <tabstop>cmb_api</tabstop>
-  <tabstop>btn_target</tabstop>
+  <tabstop>le_a</tabstop>
+  <tabstop>btn_a</tabstop>
+  <tabstop>btn_merge_dir</tabstop>
+  <tabstop>btn_b</tabstop>
+  <tabstop>le_b</tabstop>
+  <tabstop>btn_applyA</tabstop>
+  <tabstop>btn_expandAll</tabstop>
+  <tabstop>btn_collapseAll</tabstop>
+  <tabstop>btn_applyB</tabstop>
+  <tabstop>tree_a</tabstop>
+  <tabstop>tree_merged</tabstop>
+  <tabstop>tree_b</tabstop>
+  <tabstop>btn_start</tabstop>
  </tabstops>
  <resources/>
  <connections/>
