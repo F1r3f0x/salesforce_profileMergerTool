@@ -24,6 +24,7 @@ import qdarkstyle
 
 # mine
 from ui import Ui_MainWindow, UiProfileItem
+import ProfileMerger
 import models
 import utils
 
@@ -80,109 +81,24 @@ class ProfileScanner(QThread):
     [QT] Signals:
         addItems (bool): Signal to start adding items
     """
-    addItems = Signal(bool)
+    profilesMerged = Signal(dict)
 
-    def __init__(self, *args):
+    def __init__(
+        self, profile_merger: ProfileMerger.ProfileMerger, file_path_a=None, file_path_b=None,
+        *args
+    ):
         super().__init__(*args)
-        self.profile_filepath = ''
-        self.from_profile = ''
-
-    def reset_tables(self):
-        if (GlobalEstate.A_MERGED or GlobalEstate.B_MERGED):
-            properties_rescan = {}
-
-            if (len(GlobalEstate.A.PROPERTIES) > 0
-                    and self.from_profile == GlobalEstate.FROM_A):
-                GlobalEstate.A.PROPERTIES = {}
-                GlobalEstate.A_MERGED = False
-                properties_rescan = GlobalEstate.B.PROPERTIES
-            else:
-                GlobalEstate.B.PROPERTIES = {}
-                GlobalEstate.B_MERGED = False
-                properties_rescan = GlobalEstate.A.PROPERTIES
-
-            GlobalEstate.Merged.PROPERTIES = {}
-            for key, value in properties_rescan.items():
-                GlobalEstate.Merged.PROPERTIES[key] = value
+        self.profile_merger = profile_merger
+        self.file_path_a = file_path_a
+        self.file_path_b = file_path_b
 
     def run(self):
-        """
-            Overloaded, is run by calling its start() function
-        """
-        ##
-        # Reset tables
-        self.reset_tables()
+        profile_merged = self.profile_merger.merge_profiles(self.file_path_a, self.file_path_b)
 
-        # Loop through profile XML
-        tree = ElementTree.parse(self.profile_filepath)
-        tree_root = tree.getroot()
-
-        # This regex is for removing the namespace prefix of the tag
-        namespace_pattern = '^{.*}'
-        namespace_regex = re.compile(namespace_pattern)
-
-        tag = ''
-        # Create ProfileItems with the profile
-        for prof_field_element in tree_root:
-            namespace = namespace_regex.match(prof_field_element.tag).group()
-
-            namespace_value = namespace.replace('{', '')
-            namespace_value = namespace_value.replace('}', '')
-
-            if self.from_profile == GlobalEstate.FROM_A and not GlobalEstate.A.NAMESPACE:
-                GlobalEstate.A.NAMESPACE = namespace_value
-            if self.from_profile == GlobalEstate.FROM_B and not GlobalEstate.B.NAMESPACE:
-                GlobalEstate.B.NAMESPACE = namespace_value
-
-            field_type_name = prof_field_element.tag.replace(namespace, '')
-
-            # TODO: create exception and handle if not found
-            model_class = models.classes_by_modelName.get(field_type_name)
-
-            if model_class:
-                # Read metadata from xml
-                fields = {}
-                for field_child in prof_field_element:
-                    tag = field_child.tag.replace(namespace, '')
-                    fields[tag] = field_child.text
-
-                profile_field = None
-                if model_class is models.ProfileSingleValue:
-                    if field_type_name == 'custom':
-                        profile_field = model_class(
-                            field_type_name, prof_field_element.text, is_boolean=True
-                        )
-                    else:
-                        profile_field = model_class(field_type_name, prof_field_element.text)
-                else:
-                    # transfer to model
-                    profile_field = model_class()
-                    profile_field.fields = fields
-
-                _id = profile_field.model_id
-
-                if self.from_profile == GlobalEstate.FROM_A:
-                    GlobalEstate.A.PROPERTIES[_id] = profile_field
-                if self.from_profile == GlobalEstate.FROM_B:
-                    GlobalEstate.B.PROPERTIES[_id] = profile_field
-
-        # Fill merged properties dict
-        properties_dicts = None
-        if GlobalEstate.MERGE_A_TO_B:
-            properties_dicts = [GlobalEstate.B.PROPERTIES, GlobalEstate.A.PROPERTIES]
-        else:
-            properties_dicts = [GlobalEstate.A.PROPERTIES, GlobalEstate.B.PROPERTIES]
-
-        for properties in properties_dicts:
-            for _id, profile_field in properties.items():
-                GlobalEstate.Merged.PROPERTIES[_id] = profile_field
-
-        # GlobalEstate.Merged.PROPERTIES[_id] = profile_field
-
-        GlobalEstate.A_MERGED = len(GlobalEstate.A.PROPERTIES) > 0
-        GlobalEstate.B_MERGED = len(GlobalEstate.B.PROPERTIES) > 0
-
-        self.addItems.emit(True)
+        if profile_merged:
+            self.profilesMerged.emit({
+                'profile_merger': self.profile_merger
+            })
 
 
 class ProfileMergerUI(QMainWindow):
@@ -196,17 +112,32 @@ class ProfileMergerUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        ##
-        # Class Attributes
+        # Setup UI class generated with QTCreator
         self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+        ##
+        # Attributes
+
         self.tree_target = None
         self.main_stylesheet = None
         self.icon_a_to_b = QIcon()
         self.icon_b_to_a = QIcon()
-        ##
 
-        # Setup UI class generated with QTCreator
-        self.ui.setupUi(self)
+        self.profile_merger = ProfileMerger.ProfileMerger()
+
+        self.items_a = {}
+        self.items_b = {}
+        self.items_merged = {}
+        self.items = [self.items_a, self.items_b, self.items_merged]
+
+        self.categories_a = {}
+        self.categories_b = {}
+        self.categories_merged = {}
+        self.categories = [self.categories_a, self.categories_b, self.categories_merged]
+
+        self.trees = [self.ui.tree_a, self.ui.tree_b, self.ui.tree_merged]
+
 
         ##
         # Set initial state
@@ -230,8 +161,7 @@ class ProfileMergerUI(QMainWindow):
         ##
 
         # Setup Tree Widgets
-        all_tree_widgets = [self.ui.tree_a, self.ui.tree_b, self.ui.tree_merged]
-        for tree in all_tree_widgets:
+        for tree in self.trees:
             tree.clear()
             tree.headerItem().setTextAlignment(0, Qt.AlignHCenter | Qt.AlignVCenter)
             tree.itemExpanded.connect(self.handle_expand)
@@ -294,9 +224,8 @@ class ProfileMergerUI(QMainWindow):
         )
         ##
 
-        # Worker Instance
-        self.scanner_worker = ProfileScanner()
-        self.scanner_worker.addItems.connect(self.add_items)
+        self.scanner = ProfileScanner(self.profile_merger, None, None)
+        self.scanner.profilesMerged.connect(self.add_items)
 
         # TODO
         self.ui.btn_applyA.setEnabled(False)
@@ -463,104 +392,111 @@ class ProfileMergerUI(QMainWindow):
             pprint(item.__dict__)
     """
 
-    def add_items(self, state: bool):
-        if self.tree_target:
-            merged_dict = GlobalEstate.Merged.PROPERTIES
+    def add_items(self, profile_merger: ProfileMerger.ProfileMerger):
+        # Clear QTreeWidgets
+        for tree in self.trees:
+            tree.clear()
+        for categories_dict in self.categories:
+            categories_dict.clear()
 
-            self.ui.tree_merged.clear()
-            self.ui.tree_a.clear()
-            self.ui.tree_b.clear()
+        # Fill the categories dicts, with the available ones
+        for key, value in models.classes_by_modelName.items():
+            tree_item = QTreeWidgetItem()
+            tree_item.setText(0, key)
+            self.categories_a[key] = tree_item
 
-            GlobalEstate.categories_items_merged = {}
-            GlobalEstate.categories_items_a = {}
-            GlobalEstate.categories_items_b = {}
-            for key, value in models.classes_by_modelName.items():
-                tree_item = QTreeWidgetItem()
-                tree_item.setText(0, key)
-                GlobalEstate.categories_items_a[key] = tree_item
+            tree_item = QTreeWidgetItem()
+            tree_item.setText(0, key)
+            self.categories_b[key] = tree_item
 
-                tree_item = QTreeWidgetItem()
-                tree_item.setText(0, key)
-                GlobalEstate.categories_items_b[key] = tree_item
+            tree_item = QTreeWidgetItem()
+            tree_item.setText(0, key)
+            self.categories_merged[key] = tree_item
 
-                tree_item = QTreeWidgetItem()
-                tree_item.setText(0, key)
-                GlobalEstate.categories_items_merged[key] = tree_item
+        categories_by_treewidget = {
+            self.ui.tree_a: self.categories_a,
+            self.ui.tree_b: self.categories_b,
+            self.ui.tree_merged: self.categories_merged,
+        }
 
-            # Fill merged list
-            for key in sorted(merged_dict.keys()):
-                model_obj = merged_dict[key]
-                model_type = model_obj.model_name
-                model_name = model_obj.model_id
+        for tree_widget, categories in categories_by_treewidget.items():
+            for item in categories.values():
+                tree_widget.addTopLevelItem(item)
+        """
+        # Fill merged list
+        for key in sorted(merged_dict.keys()):
+            model_obj = merged_dict[key]
+            model_type = model_obj.model_name
+            model_name = model_obj.model_id
 
-                if len(model_obj.toggles.values()) > 0:
-                    item_group = []
-                    for toggle_name, toggle_value in model_obj.toggles.items():
-                        if toggle_value is not None:
-                            toggle_value = utils.str_to_bool(toggle_value)
+            if len(model_obj.toggles.values()) > 0:
+                item_group = []
+                for toggle_name, toggle_value in model_obj.toggles.items():
+                    if toggle_value is not None:
+                        toggle_value = utils.str_to_bool(toggle_value)
 
-                            item = UiProfileItem(
-                                model_obj, GlobalEstate.categories_items_merged[model_type],
-                                toggle_name=toggle_name, toggle_value=toggle_value,
-                            )
-                            item_group.append(item)
+                        item = UiProfileItem(
+                            model_obj, GlobalEstate.categories_items_merged[model_type],
+                            toggle_name=toggle_name, toggle_value=toggle_value,
+                        )
+                        item_group.append(item)
 
-                            ProfileMergerUI.replicate_item(
-                                GlobalEstate.B.PROPERTIES,
-                                GlobalEstate.Items.b,
-                                GlobalEstate.categories_items_b[model_type],
-                                key,
-                                toggle_name
-                            )
-                            ProfileMergerUI.replicate_item(
-                                GlobalEstate.A.PROPERTIES,
-                                GlobalEstate.Items.a,
-                                GlobalEstate.categories_items_a[model_type],
-                                key,
-                                toggle_name
-                            )
+                        ProfileMergerUI.replicate_item(
+                            GlobalEstate.B.PROPERTIES,
+                            GlobalEstate.Items.b,
+                            GlobalEstate.categories_items_b[model_type],
+                            key,
+                            toggle_name
+                        )
+                        ProfileMergerUI.replicate_item(
+                            GlobalEstate.A.PROPERTIES,
+                            GlobalEstate.Items.a,
+                            GlobalEstate.categories_items_a[model_type],
+                            key,
+                            toggle_name
+                        )
 
-                    GlobalEstate.Items.merged[model_name] = item_group
-                else:
-                    item = UiProfileItem(
-                        model_obj,
-                        GlobalEstate.categories_items_merged[model_type]
-                    )
-                    if hasattr(model_obj, 'value'):
-                        item.toggle_value = model_obj.value
-                    GlobalEstate.Items.merged[model_name] = item
-                    self.ui.tree_merged.addTopLevelItem(item)
+                GlobalEstate.Items.merged[model_name] = item_group
+            else:
+                item = UiProfileItem(
+                    model_obj,
+                    GlobalEstate.categories_items_merged[model_type]
+                )
+                if hasattr(model_obj, 'value'):
+                    item.toggle_value = model_obj.value
+                GlobalEstate.Items.merged[model_name] = item
+                self.ui.tree_merged.addTopLevelItem(item)
 
-                    ProfileMergerUI.replicate_item(
-                        GlobalEstate.B.PROPERTIES,
-                        GlobalEstate.Items.b,
-                        GlobalEstate.categories_items_b[model_type],
-                        key
-                    )
-                    ProfileMergerUI.replicate_item(
-                        GlobalEstate.A.PROPERTIES,
-                        GlobalEstate.Items.b,
-                        GlobalEstate.categories_items_a[model_type],
-                        key
-                    )
+                ProfileMergerUI.replicate_item(
+                    GlobalEstate.B.PROPERTIES,
+                    GlobalEstate.Items.b,
+                    GlobalEstate.categories_items_b[model_type],
+                    key
+                )
+                ProfileMergerUI.replicate_item(
+                    GlobalEstate.A.PROPERTIES,
+                    GlobalEstate.Items.b,
+                    GlobalEstate.categories_items_a[model_type],
+                    key
+                )
 
-            categories_by_treewidget = {
-                self.ui.tree_b: GlobalEstate.categories_items_b,
-                self.ui.tree_merged: GlobalEstate.categories_items_merged,
-                self.ui.tree_a: GlobalEstate.categories_items_a
-            }
+        categories_by_treewidget = {
+            self.ui.tree_b: GlobalEstate.categories_items_b,
+            self.ui.tree_merged: GlobalEstate.categories_items_merged,
+            self.ui.tree_a: GlobalEstate.categories_items_a
+        }
 
-            for tree_widget, categories in categories_by_treewidget.items():
-                for item in categories.values():
-                    if item.childCount() > 0:
-                        tree_widget.addTopLevelItem(item)
+        for tree_widget, categories in categories_by_treewidget.items():
+            for item in categories.values():
+                if item.childCount() > 0:
+                    tree_widget.addTopLevelItem(item)
 
-            ProfileMergerUI.expand_all_categories(True)
+        ProfileMergerUI.expand_all_categories(True)
 
-            print(f'SOURCE: {len(GlobalEstate.A.PROPERTIES.keys())}')
-            print(f'TARGET: {len(GlobalEstate.B.PROPERTIES.keys())}')
-            print(f'MERGED: {len(GlobalEstate.Merged.PROPERTIES.keys())}')
-
+        print(f'SOURCE: {len(GlobalEstate.A.PROPERTIES.keys())}')
+        print(f'TARGET: {len(GlobalEstate.B.PROPERTIES.keys())}')
+        print(f'MERGED: {len(GlobalEstate.Merged.PROPERTIES.keys())}')
+        """
     def sync_scroll(self, value):
         """Syncs the scrollbar of the QTreeWidgets.
 
@@ -589,20 +525,29 @@ class ProfileMergerUI(QMainWindow):
 
         if file_path != '' and le_target:
             le_target.setText(file_path)
-
+            """
             self.tree_target = tree_target
             self.scanner_worker.profile_filepath = file_path
             self.scanner_worker.from_profile = from_profile
             self.scanner_worker.start()
+            """
+            
+            if from_profile == ProfileMerger.PROFILE_A:
+                self.scanner.file_path_a = file_path
+            else:
+                self.scanner.file_path_b = file_path
+            self.scanner.run()
 
             file_name = file_path.split('/')[-1].replace('.profile', '')
 
             tree_target.setHeaderLabel(file_name)
 
+            """
             if from_profile == GlobalEstate.FROM_A:
                 self.ui.btn_close_a.setEnabled(True)
             if from_profile == GlobalEstate.FROM_B:
                 self.ui.btn_close_b.setEnabled(True)
+            """
 
     def close_profile(self, from_profile: str):
         if from_profile == GlobalEstate.FROM_A:
