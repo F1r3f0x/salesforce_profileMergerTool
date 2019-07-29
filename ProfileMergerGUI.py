@@ -65,8 +65,8 @@ class GlobalEstate:
         PROPERTIES = {}
 
     class Items:
-        a = {}
-        b = {}
+        a = []
+        b = []
         merged = {}
 
 
@@ -157,7 +157,8 @@ class ProfileScanner(QThread):
                     profile_field = model_class()
                     profile_field.fields = fields
 
-                _id = str(profile_field)
+                _id = profile_field.model_id
+                print(_id)
 
                 if self.from_profile == GlobalEstate.FROM_A:
                     GlobalEstate.A.PROPERTIES[_id] = profile_field
@@ -277,15 +278,17 @@ class ProfileMergerUI(QMainWindow):
                 self.ui.le_b, GlobalEstate.FROM_B, self.ui.tree_b
             )
         )
+        self.ui.btn_applyA.clicked.connect(
+            lambda: self.apply_all_values(GlobalEstate.FROM_A)
+        )
+        self.ui.btn_applyB.clicked.connect(
+            lambda: self.apply_all_values(GlobalEstate.FROM_B)
+        )
         ##
 
         # Worker Instance
         self.scanner_worker = ProfileScanner()
         self.scanner_worker.addItems.connect(self.add_items)
-
-        # TODO
-        self.ui.actionApplyAvalues.setEnabled(False)
-        self.ui.actionApplyBValues.setEnabled(False)
 
     ##
     # Instance Methods
@@ -436,7 +439,16 @@ class ProfileMergerUI(QMainWindow):
             self.ui.btn_merge_dir.setIcon(self.icon_b_to_a)
 
     def apply_all_values(self, from_profile: str):
-        pass
+        if from_profile == GlobalEstate.FROM_A:
+            fields_to_apply = GlobalEstate.A.PROPERTIES
+            items = GlobalEstate.Items.a
+        else:
+            fields_to_apply = GlobalEstate.B.PROPERTIES
+            items = GlobalEstate.Items.b
+
+        for item in items:
+            pprint(item.__dict__)
+
 
     def add_items(self, state: bool):
         if self.tree_target:
@@ -464,9 +476,10 @@ class ProfileMergerUI(QMainWindow):
 
             # Fill merged list
             for key in sorted(merged_dict.keys()):
+                print(key)
                 model_obj = merged_dict[key]
                 model_type = model_obj.model_name
-                model_name = str(model_obj)
+                model_name = model_obj.model_id
 
                 if len(model_obj.toggles.values()) > 0:
                     item_group = []
@@ -482,12 +495,14 @@ class ProfileMergerUI(QMainWindow):
 
                             ProfileMergerUI.replicate_item(
                                 GlobalEstate.B.PROPERTIES,
+                                GlobalEstate.Items.b,
                                 GlobalEstate.categories_items_b[model_type],
                                 key,
                                 toggle_name
                             )
                             ProfileMergerUI.replicate_item(
                                 GlobalEstate.A.PROPERTIES,
+                                GlobalEstate.Items.a,
                                 GlobalEstate.categories_items_a[model_type],
                                 key,
                                 toggle_name
@@ -503,11 +518,15 @@ class ProfileMergerUI(QMainWindow):
 
                     ProfileMergerUI.replicate_item(
                         GlobalEstate.B.PROPERTIES,
-                        GlobalEstate.categories_items_b[model_type], self.ui.tree_b, key
+                        GlobalEstate.Items.b,
+                        GlobalEstate.categories_items_b[model_type],
+                        key
                     )
                     ProfileMergerUI.replicate_item(
                         GlobalEstate.A.PROPERTIES,
-                        GlobalEstate.categories_items_a[model_type], self.ui.tree_a, key
+                        GlobalEstate.Items.b,
+                        GlobalEstate.categories_items_a[model_type],
+                        key
                     )
 
             categories_by_treewidget = {
@@ -573,7 +592,8 @@ class ProfileMergerUI(QMainWindow):
     ##
     # Static Methods
     def replicate_item(
-        global_dict, parent_item: QTreeWidgetItem, profile_field_id, toggle_name=None
+        global_dict: dict, item_list:list, parent_item: QTreeWidgetItem, profile_field_id: str,
+        toggle_name=None
     ):
         """Replicates a UiProfileItem below a parent_item (category) for the A or B QTrees,
         if the item is not found on the current list it generates an empty item for spacing.
@@ -586,6 +606,7 @@ class ProfileMergerUI(QMainWindow):
         """
         if global_dict.get(profile_field_id):
             profile_field = global_dict[profile_field_id]
+            item = None
             if toggle_name is not None:
                 # Get the value from the profile field, not the merged list
                 toggle_value = profile_field.toggles[toggle_name]
@@ -598,9 +619,9 @@ class ProfileMergerUI(QMainWindow):
                 item = UiProfileItem(
                     profile_field, parent_item, toggle_value=profile_field.value
                 )
-
             else:
                 item = UiProfileItem(profile_field, parent_item)
+            item_list.append(item)
         else:
             item = QTreeWidgetItem(parent_item)
             item.setText(0, '')

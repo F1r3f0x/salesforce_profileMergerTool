@@ -33,6 +33,7 @@ class ProfileFieldType:
 
     def __init__(self, api_version=DEFAULT_API_VERSION):
         self.api_version = api_version
+        self.model_id = ''
         self.model_name = ''
         self.model_fields = {}
         self.model_toggles = {}
@@ -55,6 +56,12 @@ class ProfileFieldType:
     def fields(self, input_fields: dict):
         self._set_fields(input_fields)
 
+    def __set_id__(self):
+        pass
+
+    def __str__(self):
+        return f'<{self.model_name}: {self.model_id}>'
+
 
 # Metadata Classes
 class ProfileActionOverride(ProfileFieldType):
@@ -71,6 +78,7 @@ class ProfileActionOverride(ProfileFieldType):
         self.type = f_type
 
         self.model_name = 'profileActionOverrides'
+        self.__set_id__()
 
     @property
     def fields(self) -> dict:
@@ -86,9 +94,10 @@ class ProfileActionOverride(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
+    def __set_id__(self):
+        self.model_id = f'{self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
 
 
 class ProfileApplicationVisibility(ProfileFieldType):
@@ -102,6 +111,7 @@ class ProfileApplicationVisibility(ProfileFieldType):
         self.__visible = visible
 
         self.model_name = 'applicationVisibilities'
+        self.__set_id__()
 
     @property
     def default(self):
@@ -137,9 +147,10 @@ class ProfileApplicationVisibility(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.application}'
+    def __set_id__(self):
+        self.model_id = f'{self.application}'
 
 
 class ProfileCategoryGroupVisibility(ProfileFieldType):
@@ -153,6 +164,7 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
         self.__visibility = visibility
 
         self.model_name = 'categoryGroupVisibilities'
+        self.__set_id__()
 
     @property
     def visibility(self):
@@ -179,9 +191,10 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.dataCategoryGroup}'
+    def __set_id__(self):
+        self.model_id = f'{self.dataCategoryGroup}'
 
 
 class ProfileApexClassAccess(ProfileFieldType):
@@ -191,6 +204,7 @@ class ProfileApexClassAccess(ProfileFieldType):
         self.__enabled = enabled
 
         self.model_name = 'classAccesses'
+        self.__set_id__()
 
     @property
     def enabled(self):
@@ -216,9 +230,10 @@ class ProfileApexClassAccess(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.apexClass}'
+    def __set_id__(self):
+        self.model_id = f'{self.apexClass}'
 
 
 class ProfileCustomPermissions(ProfileFieldType):
@@ -228,6 +243,8 @@ class ProfileCustomPermissions(ProfileFieldType):
         self.name = name
 
         self.model_name = 'customPermissions'
+        self.__set_id__()
+
 
     @property
     def enabled(self):
@@ -253,9 +270,10 @@ class ProfileCustomPermissions(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.name}'
+    def __set_id__(self):
+        self.model_id = f'{self.name}'
 
 
 class ProfileExternalDataSourceAccess(ProfileFieldType):
@@ -265,6 +283,7 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
         self.externalDataSource = externalDataSource
 
         self.model_name = 'externalDataSourceAccesses'
+        self.__set_id__()
 
     @property
     def enabled(self):
@@ -290,9 +309,10 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.externalDataSource}'
+    def __set_id__(self):
+        self.model_id = f'{self.externalDataSource}'
 
 
 class ProfileFieldLevelSecurity(ProfileFieldType):
@@ -307,6 +327,7 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
         self.__readable = readable
 
         self.model_name = 'fieldLevelSecurities' if self.api_version <= 22 else 'fieldPermissions'
+        self.__set_id__()
 
     @property
     def editable(self):
@@ -361,9 +382,10 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.field}'
+    def __set_id__(self):
+        self.model_id = f'{self.field}'
 
 
 class ProfileLayoutAssignments(ProfileFieldType):
@@ -373,6 +395,7 @@ class ProfileLayoutAssignments(ProfileFieldType):
         self.recordType = recordType
 
         self.model_name = 'layoutAssignments'
+        self.__set_id__()
 
     @property
     def fields(self):
@@ -384,12 +407,13 @@ class ProfileLayoutAssignments(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
+    def __set_id__(self):
         if self.recordType != '':
-            return f'{self.layout}: {self.recordType}'
+            self.model_id = f'{self.layout}: {self.recordType}'
         else:
-            return f'{self.layout}'
+            self.model_id = f'{self.layout}'
 
 
 class ProfileLoginHours(ProfileFieldType):
@@ -399,6 +423,7 @@ class ProfileLoginHours(ProfileFieldType):
         self.weekdayEnd = weekdayEnd
 
         self.model_name = 'loginHours'
+        self.__set_id__()
 
     @property
     def fields(self):
@@ -410,9 +435,10 @@ class ProfileLoginHours(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.weekdayStart}: {self.weekdayEnd}'
+    def __set_id__(self):
+        self.model_id = f'{self.weekdayStart}: {self.weekdayEnd}'
 
 
 class ProfileLoginIpRanges(ProfileFieldType):
@@ -425,6 +451,7 @@ class ProfileLoginIpRanges(ProfileFieldType):
         self.startAddress = startAddress
 
         self.model_name = 'loginIpRanges'
+        self.__set_id__()
 
     @property
     def fields(self):
@@ -437,9 +464,10 @@ class ProfileLoginIpRanges(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.description}: {self.startAddress} - {self.endAddress}'
+    def __set_id__(self):
+        self.model_id = f'{self.description}: {self.startAddress} - {self.endAddress}'
 
 
 class ProfileObjectPermissions(ProfileFieldType):
@@ -458,6 +486,7 @@ class ProfileObjectPermissions(ProfileFieldType):
         self.__viewAllRecords = viewAllRecords
 
         self.model_name = 'objectPermissions'
+        self.__set_id__()
 
     @property
     def allowCreate(self):
@@ -563,9 +592,10 @@ class ProfileObjectPermissions(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.object}'
+    def __set_id__(self):
+        self.model_id = f'{self.object}'
 
 
 class ProfileApexPageAccess(ProfileFieldType):
@@ -575,6 +605,7 @@ class ProfileApexPageAccess(ProfileFieldType):
         self.__enabled = enabled
 
         self.model_name = 'pageAccesses'
+        self.__set_id__()
 
     @property
     def enabled(self):
@@ -600,9 +631,10 @@ class ProfileApexPageAccess(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.apexPage}'
+    def __set_id__(self):
+        self.model_id = f'{self.apexPage}'
 
 
 class ProfileRecordTypeVisibility(ProfileFieldType):
@@ -617,6 +649,7 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
         self.visible = visible
 
         self.model_name = 'recordTypeVisibilities'
+        self.__set_id__()
 
     @property
     def default(self):
@@ -662,10 +695,10 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.recordType}'
-
+    def __set_id__(self):
+        self.model_id = f'{self.recordType}'
 
 class ProfileTabVisibility(ProfileFieldType):
     def __init__(self, tab='', visibility='', api_version=DEFAULT_API_VERSION):
@@ -674,6 +707,7 @@ class ProfileTabVisibility(ProfileFieldType):
         self.visibility = visibility
 
         self.model_name = 'tabVisibilities'
+        self.__set_id__()
 
     @property
     def fields(self):
@@ -685,9 +719,10 @@ class ProfileTabVisibility(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.tab}: {self.visibility}'
+    def __set_id__(self):
+        self.model_id = f'{self.tab}: {self.visibility}'
 
 
 class ProfileUserPermission(ProfileFieldType):
@@ -697,6 +732,7 @@ class ProfileUserPermission(ProfileFieldType):
         self.name = name
 
         self.model_name = 'userPermissions'
+        self.__set_id__()
 
     @property
     def enabled(self):
@@ -722,9 +758,10 @@ class ProfileUserPermission(ProfileFieldType):
     @fields.setter
     def fields(self, input_dict: dict):
         self._set_fields(input_dict)
+        self.__set_id__()
 
-    def __str__(self):
-        return f'{self.name}'
+    def __set_id__(self):
+        self.model_id = f'{self.name}'
 
 
 class ProfileSingleValue(ProfileFieldType):
@@ -735,9 +772,7 @@ class ProfileSingleValue(ProfileFieldType):
         if is_boolean:
             value = str_to_bool(value)
         self.value = value
-
-    def __str__(self):
-        return f'{self.model_name}'
+        self.model_id = f'{self.model_name}'
 
 
 # TODO: handle different api versions
