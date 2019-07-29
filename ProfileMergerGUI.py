@@ -158,7 +158,6 @@ class ProfileScanner(QThread):
                     profile_field.fields = fields
 
                 _id = profile_field.model_id
-                print(_id)
 
                 if self.from_profile == GlobalEstate.FROM_A:
                     GlobalEstate.A.PROPERTIES[_id] = profile_field
@@ -209,6 +208,8 @@ class ProfileMergerUI(QMainWindow):
 
         ##
         # Set initial state
+        self.setWindowState(Qt.WindowMaximized)
+
         # Get Stylesheets
         qss_dir = 'ui/'
         filename_stylesheet = 'stylesheet.css'
@@ -222,8 +223,7 @@ class ProfileMergerUI(QMainWindow):
         # Icons
         self.icon_b_to_a.addPixmap(QPixmap("ui/icons/arrow-left.svg"), QIcon.Normal, QIcon.Off)
         self.icon_a_to_b.addPixmap(QPixmap("ui/icons/arrow-right.svg"), QIcon.Normal, QIcon.Off)
-
-        self.setWindowState(Qt.WindowMaximized)
+        self.ui.btn_merge_dir.setMaximumSize(23, 23)
         self.change_merge_direction(False)
         ##
 
@@ -650,7 +650,7 @@ if __name__ == "__main__":
 
     # Setup Style
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
-    
+
     window = ProfileMergerUI()
     window.show()
 
