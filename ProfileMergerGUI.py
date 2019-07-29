@@ -310,7 +310,7 @@ class ProfileMergerUI(QMainWindow):
 
             # Goes through the merged profile and fills the xml
             for model_field in sorted(
-                GlobalEstate.Merged.PROPERTIES.values(), key=lambda x: x.model_name + str(x)
+                GlobalEstate.Merged.PROPERTIES.values(), key=lambda x: x.model_name + x.model_id
             ):
                 if not model_field.model_disabled:
                     if type(model_field) is not models.ProfileSingleValue:
