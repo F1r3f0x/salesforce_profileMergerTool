@@ -392,7 +392,11 @@ class ProfileMergerUI(QMainWindow):
             pprint(item.__dict__)
     """
 
-    def add_items(self, profile_merger: ProfileMerger.ProfileMerger):
+    def add_items(self, response_dict: dict):
+        profile_merger = response_dict.get('profile_merger')
+        if profile_merger is None:
+            return
+
         # Clear QTreeWidgets
         for tree in self.trees:
             tree.clear()
@@ -413,90 +417,65 @@ class ProfileMergerUI(QMainWindow):
             tree_item.setText(0, key)
             self.categories_merged[key] = tree_item
 
+        # Add items to the tree widgets
         categories_by_treewidget = {
             self.ui.tree_a: self.categories_a,
             self.ui.tree_b: self.categories_b,
             self.ui.tree_merged: self.categories_merged,
         }
-
         for tree_widget, categories in categories_by_treewidget.items():
             for item in categories.values():
                 tree_widget.addTopLevelItem(item)
-        """
-        # Fill merged list
-        for key in sorted(merged_dict.keys()):
-            model_obj = merged_dict[key]
-            model_type = model_obj.model_name
-            model_name = model_obj.model_id
 
-            if len(model_obj.toggles.values()) > 0:
-                item_group = []
-                for toggle_name, toggle_value in model_obj.toggles.items():
-                    if toggle_value is not None:
-                        toggle_value = utils.str_to_bool(toggle_value)
+        # Fill trees
+        trees_by_profile = {
+            profile_merger.profile_a: self.ui.tree_a,
+            profile_merger.profile_b: self.ui.tree_b,
+            profile_merger.profile_merged: self.ui.tree_merged
+        }
+        items_by_profile = {
+            profile_merger.profile_a: self.items_a,
+            profile_merger.profile_b: self.items_b,
+            profile_merger.profile_merged: self.items_merged
+        }
+        for profile, tree in trees_by_profile.items():
+            categories_dict = categories_by_treewidget[tree]
+            for _id, field in profile.fields.items():
+                if len(field.toggles.values()) > 0:
+                    item_group = []
+                    for toggle_name, toggle_value in field.toggles.items():
+                        if toggle_value is not None:
+                            toggle_value = utils.str_to_bool(toggle_value)
 
-                        item = UiProfileItem(
-                            model_obj, GlobalEstate.categories_items_merged[model_type],
-                            toggle_name=toggle_name, toggle_value=toggle_value,
-                        )
+                            item = UiProfileItem(
+                                field, categories_dict[field.model_name],
+                                toggle_name=toggle_name, toggle_value=toggle_value,
+                            )
                         item_group.append(item)
 
-                        ProfileMergerUI.replicate_item(
-                            GlobalEstate.B.PROPERTIES,
-                            GlobalEstate.Items.b,
-                            GlobalEstate.categories_items_b[model_type],
-                            key,
-                            toggle_name
-                        )
-                        ProfileMergerUI.replicate_item(
-                            GlobalEstate.A.PROPERTIES,
-                            GlobalEstate.Items.a,
-                            GlobalEstate.categories_items_a[model_type],
-                            key,
-                            toggle_name
-                        )
+                    items_by_profile[profile][_id] = item_group
+                else:
+                    toggle_value = None
+                    if hasattr(field, 'value'):
+                        toggle_value = field.value
 
-                GlobalEstate.Items.merged[model_name] = item_group
-            else:
-                item = UiProfileItem(
-                    model_obj,
-                    GlobalEstate.categories_items_merged[model_type]
-                )
-                if hasattr(model_obj, 'value'):
-                    item.toggle_value = model_obj.value
-                GlobalEstate.Items.merged[model_name] = item
-                self.ui.tree_merged.addTopLevelItem(item)
+                    item = UiProfileItem(
+                        field, categories_dict[field.model_name],
+                        toggle_value=toggle_value,
+                    )
+                    items_by_profile[profile][_id] = item
 
-                ProfileMergerUI.replicate_item(
-                    GlobalEstate.B.PROPERTIES,
-                    GlobalEstate.Items.b,
-                    GlobalEstate.categories_items_b[model_type],
-                    key
-                )
-                ProfileMergerUI.replicate_item(
-                    GlobalEstate.A.PROPERTIES,
-                    GlobalEstate.Items.b,
-                    GlobalEstate.categories_items_a[model_type],
-                    key
-                )
-
-        categories_by_treewidget = {
-            self.ui.tree_b: GlobalEstate.categories_items_b,
-            self.ui.tree_merged: GlobalEstate.categories_items_merged,
-            self.ui.tree_a: GlobalEstate.categories_items_a
-        }
+                print(_id, field.toggles)
 
         for tree_widget, categories in categories_by_treewidget.items():
             for item in categories.values():
                 if item.childCount() > 0:
                     tree_widget.addTopLevelItem(item)
+                else:
+                    # Remove empty categories
+                    row_index = tree_widget.indexOfTopLevelItem(item)
+                    tree_widget.takeTopLevelItem(row_index)
 
-        ProfileMergerUI.expand_all_categories(True)
-
-        print(f'SOURCE: {len(GlobalEstate.A.PROPERTIES.keys())}')
-        print(f'TARGET: {len(GlobalEstate.B.PROPERTIES.keys())}')
-        print(f'MERGED: {len(GlobalEstate.Merged.PROPERTIES.keys())}')
-        """
     def sync_scroll(self, value):
         """Syncs the scrollbar of the QTreeWidgets.
 
@@ -531,7 +510,7 @@ class ProfileMergerUI(QMainWindow):
             self.scanner_worker.from_profile = from_profile
             self.scanner_worker.start()
             """
-            
+
             if from_profile == ProfileMerger.PROFILE_A:
                 self.scanner.file_path_a = file_path
             else:

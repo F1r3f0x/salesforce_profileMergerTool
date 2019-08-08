@@ -133,6 +133,7 @@ class ProfileMerger:
         self.profile_a = Profile(PROFILE_A)
         self.profile_b = Profile(PROFILE_B)
         self.profile_merged = Profile(PROFILE_MERGED)
+        self.profiles = [self.profile_a, self.profile_b, self.profile_merged]
         self.merge_a_to_b = False
 
     def merge_profiles(self, profile_a_path=None, profile_b_path=None) -> Profile:
