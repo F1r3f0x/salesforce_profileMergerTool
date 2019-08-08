@@ -67,7 +67,10 @@ class UiProfileItem(QTreeWidgetItem):
     def toggle_value(self, value: bool):
         if self.toggle_name is not None:
             setattr(self.model_ref, self.toggle_name, value)
-        elif type(self.model_ref) is models.ProfileSingleValue:
+        elif (
+            type(self.model_ref) is models.ProfileSingleValue
+            and type(self.model_ref.value) is bool
+        ):
             self.model_ref.value = value
 
         self.__toggle_value = value
@@ -96,7 +99,7 @@ class UiProfileItem(QTreeWidgetItem):
 
         self.setText(0, self.__item_label)
 
-        if self.toggle_value is not None:
+        if self.toggle_value is not None and type(self.toggle_value) is bool:
             if self.toggle_value:
                 self.setBackground(0, brush_b_enabled)
             else:
