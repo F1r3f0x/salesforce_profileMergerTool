@@ -10,7 +10,6 @@ Copyright: Patricio Labin Correa - 2019
 
 # std
 import sys
-import re
 from xml.etree import ElementTree
 from xml.dom import minidom
 # from pprint import pprint
@@ -464,8 +463,6 @@ class ProfileMergerUI(QMainWindow):
                         toggle_value=toggle_value,
                     )
                     items_by_profile[profile][_id] = item
-
-                print(_id, field.toggles)
 
         for tree_widget, categories in categories_by_treewidget.items():
             for item in categories.values():

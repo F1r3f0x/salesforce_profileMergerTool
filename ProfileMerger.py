@@ -127,6 +127,11 @@ class Profile:
         self.file_path = None
         self.fields.clear()
 
+    def set_active(self):
+        pass
+
+    def set_value(self):
+        pass
 
 class ProfileMerger:
     def __init__(self, *args, **kwargs):
