@@ -22,11 +22,11 @@ PROFILE_MERGED = 'AB'
 
 class Profile:
     def __init__(self, name, namespace=None, *args, **kwargs):
-        self.name = ''
+        self.name = name
         self.file_path = ''
         self.is_merged = False
         self.namespace = None
-        self.fields = {}
+        self.__fields = {}
 
     def scan_file(self, file_path):
         if not file_path:
@@ -74,7 +74,7 @@ class Profile:
                     profile_field = model_class()
                     profile_field.fields = fields
 
-                _id = profile_field.model_id
+                _id = profile_field.id
                 self.fields[_id] = profile_field
         return True
 
@@ -92,7 +92,7 @@ class Profile:
 
             # Goes through the merged profile and fills the xml
             for model_field in sorted(
-                self.fields.values(), key=lambda x: x.model_name + x.model_id
+                self.fields.values(), key=lambda x: x.id
             ):
                 if not model_field.model_disabled:
                     if type(model_field) is not models.ProfileSingleValue:
@@ -127,6 +127,24 @@ class Profile:
         self.file_path = None
         self.fields.clear()
 
+    @property
+    def fields(self) -> dict:
+        return self.__fields
+    
+    @fields.setter
+    def fields(self, fields_iter):
+        if type(fields_iter) is list:
+            fields = {}
+            for field in fields_iter:
+                fields[field.id] = field
+            self.__fields = fields
+            
+        if type(fields_iter) is dict:
+            self.__fields = fields_iter
+
+
+        
+
     def set_active(self):
         pass
 
@@ -142,6 +160,7 @@ class ProfileMerger:
         self.merge_a_to_b = False
 
     def merge_profiles(self, profile_a_path=None, profile_b_path=None) -> Profile:
+        self.profile_merged.clear()
         self.profile_a.scan_file(profile_a_path)
         self.profile_b.scan_file(profile_b_path)
 

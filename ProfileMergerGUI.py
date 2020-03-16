@@ -250,7 +250,7 @@ class ProfileMergerUI(QMainWindow):
 
             # Goes through the merged profile and fills the xml
             for model_field in sorted(
-                GlobalEstate.Merged.PROPERTIES.values(), key=lambda x: x.model_name + x.model_id
+                GlobalEstate.Merged.PROPERTIES.values(), key=lambda x: x.id
             ):
                 if not model_field.model_disabled:
                     if type(model_field) is not models.ProfileSingleValue:
@@ -277,7 +277,7 @@ class ProfileMergerUI(QMainWindow):
 
             # Write to the selected path
             with open(file_path, 'w', encoding='utf-8') as file_pointer:
-                file_pointer.write(xml_str)
+                file_pointer.write(xml_str)     
 
             # Show result
             msgbox = QMessageBox()

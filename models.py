@@ -56,6 +56,10 @@ class ProfileFieldType:
     def fields(self, input_fields: dict):
         self._set_fields(input_fields)
 
+    @property
+    def id(self) -> str:
+        return f'{self.model_name}-{self.model_id}'
+
     def __set_id__(self):
         pass
 
