@@ -619,7 +619,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     # Setup Style
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyside())
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
 
     window = ProfileMergerUI()
     window.show()
