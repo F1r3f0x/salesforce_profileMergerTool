@@ -11,7 +11,6 @@ Copyright: Patricio Labin Correa - 2019
 import re
 from xml.etree import ElementTree
 from xml.dom import minidom
-from pprint import pprint
 
 import models
 
@@ -21,17 +20,23 @@ PROFILE_MERGED = 'AB'
 
 
 class Profile:
-    def __init__(self, name, namespace=None, *args, **kwargs):
+    """
+        This class handles a profile model.
+
+        Attributes:
+            name (str): Instance Name.
+            file_path (str): Path to the Salesforce profile file.
+            namespace (str): Profile namespace.
+            fields (dict): Profile fields container.
+    """
+
+    def __init__(self, name: str, file_path: str, namespace=None, *args, **kwargs):
         self.name = name
         self.file_path = ''
-        self.is_merged = False
         self.namespace = None
         self.__fields = {}
 
-    def scan_file(self, file_path):
-        if not file_path:
-            return False
-
+    def scan_file(self, file_path=None):
         self.clear()
         self.file_path = file_path
 
@@ -85,52 +90,49 @@ class Profile:
         if override_file_path is not None:
             self.file_path = override_file_path
 
-        if self.file_path:
-            xml_root = ElementTree.Element(
-                'Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'}
-            )
+        if self.file_path is None:
+            return
 
-            # Goes through the merged profile and fills the xml
-            for model_field in sorted(
-                self.fields.values(), key=lambda x: x.id
-            ):
-                if not model_field.model_disabled:
-                    if type(model_field) is not models.ProfileSingleValue:
-                        c = ElementTree.SubElement(xml_root, model_field.model_name)
-                        if model_field.fields:
-                            for field, value in model_field.fields.items():
-                                if value is not None and value != '':
-                                    if type(value) is bool:
-                                        value = str(value).lower()
-                                    ElementTree.SubElement(c, field).text = value
-                    else:
-                        field = model_field.model_name
-                        value = model_field.value
-                        if value is not None and value != '':
-                            if type(value) is bool:
-                                value = str(value).lower()
-                            c = ElementTree.SubElement(xml_root, model_field.model_name)
-                            c.text = value
+        xml_root = ElementTree.Element(
+            'Profile', attrib={'xmlns': 'http://soap.sforce.com/2006/04/metadata'}
+        )
 
-            # Get the xml as a String and then prettyfies it
-            xml_str = ElementTree.tostring(xml_root, 'utf-8')
-            reparsed = minidom.parseString(xml_str)
-            xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
+        #  Goes through the profile fields and creates a new xml
+        sub_element = None
+        for model_field in sorted(
+            self.fields.values(), key=lambda x: x.id
+        ):
+            if not model_field.model_disabled:
+                if type(model_field) is not models.ProfileSingleValue:
+                    sub_element = ElementTree.SubElement(xml_root, model_field.model_name)
+                    if model_field.fields:
+                        for field, value in model_field.fields.items():
+                            if value and value != '':
+                                if type(value) is bool:
+                                    value = str(value).lower()
+                                ElementTree.SubElement(sub_element, field).text = value
+                else:
+                    field = model_field.model_name
+                    value = model_field.value
+                    if value is not None and value != '':
+                        if type(value) is bool:
+                            value = str(value).lower()
+                        sub_element = ElementTree.SubElement(xml_root, model_field.model_name)
+                        sub_element.text = value
 
-            # Write to the selected path
-            with open(self.file_path, 'w', encoding='utf-8') as file_pointer:
-                file_pointer.write(xml_str)
+        # Get the xml as a String and then prettyfies it
+        xml_str = ElementTree.tostring(xml_root, 'utf-8')
+        reparsed = minidom.parseString(xml_str)
+        xml_str = reparsed.toprettyxml(indent="    ", encoding='UTF-8').decode('utf-8').rstrip()
 
-    def clear(self):
-        self.is_merged = False
-        self.namespace = None
-        self.file_path = None
-        self.fields.clear()
+        # Write to the selected path
+        with open(self.file_path, 'w', encoding='utf-8') as file_pointer:
+            file_pointer.write(xml_str)
 
     @property
     def fields(self) -> dict:
         return self.__fields
-    
+
     @fields.setter
     def fields(self, fields_iter):
         if type(fields_iter) is list:
@@ -138,18 +140,37 @@ class Profile:
             for field in fields_iter:
                 fields[field.id] = field
             self.__fields = fields
-            
+
         if type(fields_iter) is dict:
             self.__fields = fields_iter
 
+    def add(self, field: models.ProfileFieldType):
+        self.fields[field.id] = field
 
-        
+    def remove(self, field: models.ProfileFieldType):
+        self.fields.pop(field.id)
 
-    def set_active(self):
-        pass
+    def get(self, field_id: str) -> models.ProfileFieldType:
+        field = self.fields.get(field_id)
+        if not field:
+            raise KeyError('Field Not Found')
+        return field
 
-    def set_value(self):
-        pass
+    def disable(self, field_id: str) -> models.ProfileFieldType:
+        field = self.get(field_id)
+        field.model_disabled = False
+        return field
+
+    def enable(self, field_id) -> models.ProfileFieldType:
+        field = self.get(field_id)
+        field.model_disabled = True
+        return field
+
+    def clear(self):
+        self.namespace = None
+        self.file_path = None
+        self.fields.clear()
+
 
 class ProfileMerger:
     def __init__(self, *args, **kwargs):
