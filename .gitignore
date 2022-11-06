@@ -7,3 +7,4 @@ dist
 output.profile
 ui/transferui.py
 tests/my_scripts
+/test_output.profile
