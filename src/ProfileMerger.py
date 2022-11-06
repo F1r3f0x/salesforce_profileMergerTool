@@ -12,23 +12,25 @@ import re
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+from setup_logging import setup_logging
+
 import models
 
 PROFILE_A = 'A'
 PROFILE_B = 'B'
 PROFILE_MERGED = 'AB'
 DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
+LOGFILE_NAME = 'profilemerger'
 
 
 class Profile:
-    """
-        This class handles a profile model.
+    """This class handles profile scanning, field generation and saving.
 
-        Attributes:
-            name (str): Instance Name.
-            file_path (str): Path to the Salesforce profile file.
-            namespace (str): Profile namespace.
-            fields (dict): Profile fields container.
+    Attributes:
+        name (str): Instance Name.
+        file_path (str): Path to the Salesforce profile file.
+        namespace (str): Profile namespace.
+        fields (dict): Profile fields container.
     """
 
     def __init__(self, name: str, file_path: str = None, namespace=None, *args, **kwargs):
@@ -40,7 +42,16 @@ class Profile:
         if file_path and not file_path.isspace():
             self.scan_file(file_path)
 
-    def scan_file(self, file_path=None):
+
+    def scan_file(self, file_path=None) -> dict:
+        """Scans a *.profile* file to get all the fields with their types.
+
+        Args:
+            file_path (_type_, optional): Path to the *.profile* file. Defaults to None.
+
+        Returns:
+            dict: Fields dictionary.
+        """
         self.clear()
         self.file_path = file_path
 
@@ -85,9 +96,10 @@ class Profile:
 
                 _id = profile_field.id
                 self.fields[_id] = profile_field
-        return True
+        return self.fields
 
-    def save_file(self, override_file_path=DEFAULT_OUTPUT_PATH):
+
+    def save_file(self, override_file_path=DEFAULT_OUTPUT_PATH) -> bool:
         """Picks a path and saves the merged profile to it.
         """
 
@@ -132,10 +144,14 @@ class Profile:
         # Write to the selected path
         with open(self.file_path, 'w', encoding='utf-8') as file_pointer:
             file_pointer.write(xml_str)
+        
+        return True
+
 
     @property
     def fields(self) -> dict:
         return self.__fields
+
 
     @fields.setter
     def fields(self, fields_iter):
@@ -148,11 +164,14 @@ class Profile:
         if type(fields_iter) is dict:
             self.__fields = fields_iter
 
+
     def add(self, field: models.ProfileFieldType):
         self.fields[field.id] = field
 
+
     def remove(self, field: models.ProfileFieldType):
         self.fields.pop(field.id)
+
 
     def get(self, field_id: str) -> models.ProfileFieldType:
         field = self.fields.get(field_id)
@@ -160,15 +179,18 @@ class Profile:
             raise KeyError('Field Not Found')
         return field
 
+
     def disable(self, field_id: str) -> models.ProfileFieldType:
         field = self.get(field_id)
         field.model_disabled = False
         return field
 
+
     def enable(self, field_id) -> models.ProfileFieldType:
         field = self.get(field_id)
         field.model_disabled = True
         return field
+
 
     def clear(self):
         self.namespace = None
@@ -176,13 +198,25 @@ class Profile:
         self.fields.clear()
 
 
+    def __str__(self) -> str:
+        return f'<Profile {self.name}: File Path="{self.file_path}" Fields Qty={len(self.fields)} >'
+
+
 class ProfileMerger:
+    """This class handles the merges
+    
+    Attributes:
+
+    """
+    
+    
     def __init__(self, profile_a_path: str , profile_b_path: str, *args, **kwargs):
         self.profile_a = Profile(PROFILE_A, profile_a_path)
         self.profile_b = Profile(PROFILE_B, profile_b_path)
         self.profile_merged = Profile(PROFILE_MERGED)
         self.profiles = [self.profile_a, self.profile_b, self.profile_merged]
         self.merge_a_to_b = False
+
 
     def merge(self, profile_a_path: str=None , profile_b_path: str=None) -> Profile:
         
@@ -198,6 +232,7 @@ class ProfileMerger:
         if not self.merge_a_to_b:
             profiles = profiles[::-1]
 
+        # TODO: log the diffs
         for profile in profiles:
             fields = profile.fields
             for _id, field in fields.items():
@@ -206,14 +241,19 @@ class ProfileMerger:
 
         return self.profile_merged
     
-    def merge_and_save():
-        pass
+    
+    def merge_and_save(self, profile_a_path: str=None , profile_b_path: str=None) -> bool:
+        self.merge(profile_a_path, profile_b_path)
+        return self.profile_merged.save_file()
 
 
 if __name__ == '__main__':
-    merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
     
+    setup_logging(LOGFILE_NAME)
+    
+    merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
     print(merger.profile_a)
     print(merger.profile_b)
-    print(merger.merge().fields)
+    
+    merger.merge_and_save()
     

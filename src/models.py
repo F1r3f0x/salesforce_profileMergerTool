@@ -13,6 +13,7 @@ Copyright: Patricio Labin Correa - 2019
 @F1r3f0x
 """
 
+
 from typing import List
 from utils import str_to_bool
 
@@ -802,7 +803,7 @@ classes_by_modelName = {
     'userLicense': ProfileSingleValue
 }
 
-
+# TODO: Update API versions
 class Profile:
     def __init__(
         self, applicationVisibilities: List[ProfileApplicationVisibility],
