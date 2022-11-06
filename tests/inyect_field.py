@@ -6,7 +6,7 @@ import models
 
 if __name__ == '__main__':
     profile_test = Profile('test')
-    profile_test.scan_file('test_a.profile')
+    profile_test.scan_file('tests/test_a.profile')
 
     print('Pre injection')
     pprint(profile_test.fields)

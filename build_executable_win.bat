@@ -1,1 +1,0 @@
-pyinstaller.exe .\ProfileMergerGUI.spec -F -c --clean

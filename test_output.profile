@@ -2,8 +2,6 @@
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <applicationVisibilities>
         <application>CustomApp1</application>
-        <default>false</default>
-        <visible>true</visible>
     </applicationVisibilities>
     <applicationVisibilities>
         <application>CustomApp2</application>
@@ -12,6 +10,9 @@
     </applicationVisibilities>
     <applicationVisibilities>
         <application>CustomApp3</application>
+    </applicationVisibilities>
+    <applicationVisibilities>
+        <application>TESTAPP</application>
         <default>true</default>
         <visible>true</visible>
     </applicationVisibilities>
@@ -21,18 +22,15 @@
     </classAccesses>
     <classAccesses>
         <apexClass>AwesomeCustomClass2</apexClass>
-        <enabled>true</enabled>
     </classAccesses>
-    <custom>true</custom>
+    <custom>false</custom>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>Account.AccountNumber</field>
-        <readable>false</readable>
+        <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
         <field>Account.AnnualRevenue</field>
-        <readable>false</readable>
     </fieldPermissions>
     <layoutAssignments>
         <layout>Account - Account Layout</layout>
@@ -52,29 +50,29 @@
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
-        <allowDelete>false</allowDelete>
+        <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <modifyAllRecords>false</modifyAllRecords>
+        <modifyAllRecords>true</modifyAllRecords>
         <object>Asset</object>
-        <viewAllRecords>false</viewAllRecords>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
-        <allowDelete>false</allowDelete>
+        <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <modifyAllRecords>false</modifyAllRecords>
+        <modifyAllRecords>true</modifyAllRecords>
         <object>Case</object>
-        <viewAllRecords>false</viewAllRecords>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <pageAccesses>
-        <apexPage>viewContact</apexPage>
+        <apexPage>viewAccount</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
-        <apexPage>viewAccount</apexPage>
-        <enabled>false</enabled>
+        <apexPage>viewContact</apexPage>
+        <enabled>true</enabled>
     </pageAccesses>
     <profileActionOverrides>
         <actionName>Tab</actionName>
@@ -84,14 +82,12 @@
         <type>Flexipage</type>
     </profileActionOverrides>
     <recordTypeVisibilities>
-        <default>false</default>
-        <personAccountDefault>false</personAccountDefault>
+        <default>true</default>
+        <personAccountDefault>true</personAccountDefault>
         <recordType>Account.CustomRT</recordType>
-        <visible>false</visible>
+        <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>true</default>
-        <personAccountDefault>false</personAccountDefault>
         <recordType>Account.CustomRT2</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
@@ -137,7 +133,7 @@
     </tabVisibilities>
     <userLicense>Salesforce</userLicense>
     <userPermissions>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
         <name>ActivateContract</name>
     </userPermissions>
     <userPermissions>
@@ -153,24 +149,7 @@
         <name>AddDirectMessageMembers</name>
     </userPermissions>
     <userPermissions>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
         <name>AllowUniversalSearch</name>
     </userPermissions>
-    <applicationVisibilities>
-        <application>CustomApp4</application>
-        <default>true</default>
-        <visible>true</visible>
-    </applicationVisibilities>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Account.AccountSource</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <layoutAssignments>
-        <layout>Account-Business Account Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>Account-Business Account Layout</layout>
-        <recordType>Account.CustomRT2</recordType>
-    </layoutAssignments>
 </Profile>

@@ -17,6 +17,7 @@ import models
 PROFILE_A = 'A'
 PROFILE_B = 'B'
 PROFILE_MERGED = 'AB'
+DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
 
 
 class Profile:
@@ -30,11 +31,14 @@ class Profile:
             fields (dict): Profile fields container.
     """
 
-    def __init__(self, name: str, file_path: str, namespace=None, *args, **kwargs):
+    def __init__(self, name: str, file_path: str = None, namespace=None, *args, **kwargs):
         self.name = name
-        self.file_path = ''
+        self.file_path = file_path
         self.namespace = None
         self.__fields = {}
+        
+        if file_path and not file_path.isspace():
+            self.scan_file(file_path)
 
     def scan_file(self, file_path=None):
         self.clear()
@@ -83,7 +87,7 @@ class Profile:
                 self.fields[_id] = profile_field
         return True
 
-    def save_file(self, override_file_path=None):
+    def save_file(self, override_file_path=DEFAULT_OUTPUT_PATH):
         """Picks a path and saves the merged profile to it.
         """
 
@@ -173,17 +177,22 @@ class Profile:
 
 
 class ProfileMerger:
-    def __init__(self, *args, **kwargs):
-        self.profile_a = Profile(PROFILE_A)
-        self.profile_b = Profile(PROFILE_B)
+    def __init__(self, profile_a_path: str , profile_b_path: str, *args, **kwargs):
+        self.profile_a = Profile(PROFILE_A, profile_a_path)
+        self.profile_b = Profile(PROFILE_B, profile_b_path)
         self.profile_merged = Profile(PROFILE_MERGED)
         self.profiles = [self.profile_a, self.profile_b, self.profile_merged]
         self.merge_a_to_b = False
 
-    def merge_profiles(self, profile_a_path=None, profile_b_path=None) -> Profile:
+    def merge(self, profile_a_path: str=None , profile_b_path: str=None) -> Profile:
+        
         self.profile_merged.clear()
-        self.profile_a.scan_file(profile_a_path)
-        self.profile_b.scan_file(profile_b_path)
+        
+        if profile_a_path and not profile_a_path.isspace():
+            self.profile_a.scan_file(profile_a_path)
+            
+        if profile_b_path and not profile_b_path.isspace():
+            self.profile_b.scan_file(profile_b_path)
 
         profiles = [self.profile_b, self.profile_a]
         if not self.merge_a_to_b:
@@ -196,8 +205,15 @@ class ProfileMerger:
             profile.is_merged = True
 
         return self.profile_merged
+    
+    def merge_and_save():
+        pass
 
 
 if __name__ == '__main__':
-    merger = ProfileMerger()
-    merger.merge()
+    merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
+    
+    print(merger.profile_a)
+    print(merger.profile_b)
+    print(merger.merge().fields)
+    
