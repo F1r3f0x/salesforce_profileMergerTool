@@ -203,7 +203,7 @@ class Profile:
 
 
     def __str__(self) -> str:
-        return f'<Profile {self.name}: File Path="{self.file_path}" Fields Qty={len(self.fields)} >'
+        return f'Profile {self.name}: File Path="{self.file_path}" Fields Qty={len(self.fields)}'
 
 
 class ProfileMerger:
@@ -256,6 +256,7 @@ class ProfileMerger:
             merged_field = self.profile_merged.fields.get(_id)
             if merged_field:
                 value_merge = ValueMerge(_id, field, merged_field.fields, field.fields)
+                logging.debug(f'Merged values: {value_merge}')
                 if value_merge.is_different:
                     diffs.append(value_merge)
                 
@@ -263,7 +264,7 @@ class ProfileMerger:
         other.is_merged = True
         
         for i, diff in enumerate(diffs):
-            logging.info(f'Difference {i}: {diff.field_id} || {diff.values_a}  --> {diff.values_b}')
+            logging.info(f'Difference {i}: {diff}')
         
         return self.profile_merged
     
@@ -287,6 +288,9 @@ class ValueMerge:
             if value_a != value_b:
                 return True
         return False
+    
+    def __str__(self) -> str:
+        return f'{self.field_id} || {self.values_a}  --> {self.values_b}'
     
 if __name__ == '__main__':
     merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
