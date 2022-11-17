@@ -9,18 +9,22 @@ Copyright: Patricio Labin Correa - 2019
 """
 
 import re
+import logging
 from xml.etree import ElementTree
 from xml.dom import minidom
-
-from setup_logging import setup_logging
+from dataclasses import dataclass
 
 import models
+from utils import setup_logging
+
 
 PROFILE_A = 'A'
 PROFILE_B = 'B'
 PROFILE_MERGED = 'AB'
 DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
 LOGFILE_NAME = 'profilemerger'
+
+setup_logging(LOGFILE_NAME)
 
 
 class Profile:
@@ -228,17 +232,39 @@ class ProfileMerger:
         if profile_b_path and not profile_b_path.isspace():
             self.profile_b.scan_file(profile_b_path)
 
-        profiles = [self.profile_b, self.profile_a]
+        profiles = (self.profile_b, self.profile_a)
         if not self.merge_a_to_b:
             profiles = profiles[::-1]
-
-        # TODO: log the diffs
-        for profile in profiles:
-            fields = profile.fields
-            for _id, field in fields.items():
-                self.profile_merged.fields[_id] = field
-            profile.is_merged = True
-
+            
+        base = profiles[0]
+        other = profiles[1]
+        
+        logging.info(f'Base Profile {base}')
+        logging.info(f'Other Profile {other}')
+        
+        # Add base fields to merged profile
+        base_fields = base.fields
+        for _id, field in base_fields.items():
+            self.profile_merged.fields[_id] = field
+            logging.debug(f'Added field to merge profile: {_id}{field}')
+        base.is_meged = True
+                
+        # Add other fields to merge profile, log the diffs
+        other_fields = other.fields
+        diffs = []
+        for _id, field in other_fields.items():
+            merged_field = self.profile_merged.fields.get(_id)
+            if merged_field:
+                value_merge = ValueMerge(_id, field, merged_field.fields, field.fields)
+                if value_merge.is_different:
+                    diffs.append(value_merge)
+                
+            self.profile_merged.fields[_id] = field
+        other.is_merged = True
+        
+        for i, diff in enumerate(diffs):
+            logging.info(f'Difference {i}: {diff.field_id} || {diff.values_a}  --> {diff.values_b}')
+        
         return self.profile_merged
     
     
@@ -247,13 +273,22 @@ class ProfileMerger:
         return self.profile_merged.save_file()
 
 
+@dataclass
+class ValueMerge:
+    field_id: str
+    field_ref: models.ProfileFieldType
+    values_a: list
+    values_b: list
+    
+    @property
+    def is_different(self) -> bool:
+        for value_name, value_a in self.values_a.items():
+            value_b = self.values_b.get(value_name)
+            if value_a != value_b:
+                return True
+        return False
+    
 if __name__ == '__main__':
-    
-    setup_logging(LOGFILE_NAME)
-    
     merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
-    print(merger.profile_a)
-    print(merger.profile_b)
-    
     merger.merge_and_save()
     
