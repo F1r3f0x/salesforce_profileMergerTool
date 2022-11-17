@@ -24,8 +24,6 @@ PROFILE_MERGED = 'AB'
 DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
 LOGFILE_NAME = 'profilemerger'
 
-setup_logging(LOGFILE_NAME)
-
 
 class Profile:
     """This class handles profile scanning, field generation and saving.
@@ -293,6 +291,8 @@ class ValueMerge:
         return f'{self.field_id} || {self.values_a}  --> {self.values_b}'
     
 if __name__ == '__main__':
+    setup_logging(LOGFILE_NAME)
+    
     merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
     merger.merge_and_save()
     
