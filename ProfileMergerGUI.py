@@ -446,9 +446,13 @@ class ProfileMergerUI(QMainWindow):
             GlobalEstate.MERGE_A_TO_B = a_to_b
 
         if GlobalEstate.MERGE_A_TO_B:
-            self.ui.btn_merge_dir.setIcon(self.icon_a_to_b)
-        else:
             self.ui.btn_merge_dir.setIcon(self.icon_b_to_a)
+
+        else:
+            self.ui.btn_merge_dir.setIcon(self.icon_a_to_b)
+            
+
+
 
     """
     def apply_all_values(self, from_profile: str):
