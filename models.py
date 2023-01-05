@@ -16,7 +16,7 @@ Copyright: Patricio Labin Correa - 2019
 from typing import List
 from utils import str_to_bool
 
-DEFAULT_API_VERSION = 44
+DEFAULT_API_VERSION = 47
 
 
 class ProfileFieldType:
