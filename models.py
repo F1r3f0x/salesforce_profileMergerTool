@@ -172,7 +172,11 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
     @visibility.setter
     def visibility(self, value):
-        self.__visibility = str_to_bool(value)
+        if value == "ALL":
+            self.__visibility = "ALL"
+        else:
+            self.__visibility = str_to_bool(value)
+
 
     @property
     def toggles(self):
@@ -313,18 +317,17 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
         self.model_id = f'{self.externalDataSource}'
 
 
-#readble por padrão tem que ser edible
+#readable por padrão tem que ser editable
 class ProfileFieldLevelSecurity(ProfileFieldType):
     def __init__(
-        self, editable=False, field='', readable=False, hidden=False,
+        self, editable=False, field='', readable=None, hidden=False,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
         self.__editable = editable
         self.field = field
         self.__hidden = hidden
-        self.__readable = True if self.__editable else self.__readable
-
+        self.__readable = True if editable or readable is None else readable
         self.model_name = 'fieldLevelSecurities' if self.api_version <= 22 else 'fieldPermissions'
         self.__set_id__()
 
