@@ -16,8 +16,7 @@ Copyright: Patricio Labin Correa - 2019
 from typing import List
 from utils import str_to_bool
 
-DEFAULT_API_VERSION = 47
-
+DEFAULT_API_VERSION = 54
 
 class ProfileFieldType:
     """Base Metadata class
@@ -278,6 +277,63 @@ class ProfileCustomPermissions(ProfileFieldType):
         self.model_id = f'{self.name}'
 
 
+class ProfileCustomMetadataTypeAccess(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customMetadataTypeAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.name}: {self.enabled}'
+        else:
+            self.model_id = f'{self.name}'
+
+
+
+class ProfileCustomSettingAccesses(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customSettingAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.name}: {self.enabled}'
+        else:
+            self.model_id = f'{self.name}'
+
+
 class ProfileExternalDataSourceAccess(ProfileFieldType):
     def __init__(self, enabled=False, externalDataSource='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
@@ -389,6 +445,32 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
     def __set_id__(self):
         self.model_id = f'{self.field}'
 
+class ProfileFlowAccess(ProfileFieldType):
+    def __init__(self, enabled=False, flow='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.flow = flow
+
+        self.model_name = 'flowAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'flow': self.flow
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.flow}: {self.enabled}'
+        else:
+            self.model_id = f'{self.flow}'
 
 class ProfileLayoutAssignments(ProfileFieldType):
     def __init__(self, layout='', recordType='', api_version=DEFAULT_API_VERSION):
@@ -787,8 +869,11 @@ classes_by_modelName = {
     ProfileApplicationVisibility().model_name: ProfileApplicationVisibility,
     ProfileCategoryGroupVisibility().model_name: ProfileCategoryGroupVisibility,
     ProfileCustomPermissions().model_name: ProfileCustomPermissions,
+    ProfileCustomMetadataTypeAccess().model_name: ProfileCustomMetadataTypeAccess,
+    ProfileCustomSettingAccesses().model_name: ProfileCustomSettingAccesses,
     ProfileExternalDataSourceAccess().model_name: ProfileExternalDataSourceAccess,
     ProfileFieldLevelSecurity().model_name: ProfileFieldLevelSecurity,
+    ProfileFlowAccess().model_name: ProfileFlowAccess,
     ProfileLayoutAssignments().model_name: ProfileLayoutAssignments,
     ProfileLoginHours().model_name: ProfileLoginHours,
     ProfileLoginIpRanges().model_name: ProfileLoginIpRanges,
@@ -821,7 +906,10 @@ class Profile:
         recordTypeVisibilities: List[ProfileRecordTypeVisibility],
         tabVisibilities: List[ProfileTabVisibility],
         userLicense: str, userPermissions: List[ProfileUserPermission],
-        apiVersion=DEFAULT_API_VERSION
+        flowAccesses: List[ProfileFlowAccess],
+        customSettingAccesses: List[ProfileCustomSettingAccesses],
+        customMetadataTypeAccesses: List[ProfileCustomMetadataTypeAccess],
+        apiVersion=DEFAULT_API_VERSION,
     ):
         self.fullName = fullName
         self.layoutAssignments = layoutAssignments
@@ -845,3 +933,6 @@ class Profile:
         if apiVersion >= 41: self.categoryGroupVisibilities = categoryGroupVisibilities
         if apiVersion >= 17: self.loginIpRanges = loginIpRanges
         if apiVersion >= 37 and apiVersion <= 44: self.profileActionOverrides = profileActionOverrides
+        if apiVersion >= 47: self.flowAccesses = flowAccesses
+        if apiVersion >= 47: self.customSettingAccesses = customSettingAccesses
+        if apiVersion >= 47: self.customMetadataTypeAccesses = customMetadataTypeAccesses
