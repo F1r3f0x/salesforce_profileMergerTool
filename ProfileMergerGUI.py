@@ -223,10 +223,10 @@ class ProfileMergerUI(QMainWindow):
             print(f'{qss_dir}{filename_stylesheet} not found!')
 
         # Icons
-        self.icon_b_to_a.addPixmap(QPixmap("ui/icons/arrow-left.svg"), QIcon.Normal, QIcon.Off)
-        self.icon_a_to_b.addPixmap(QPixmap("ui/icons/arrow-right.svg"), QIcon.Normal, QIcon.Off)
+        self.icon_b_to_a.addPixmap(QPixmap("ui/icons/arrow-right.svg"), QIcon.Normal, QIcon.Off)
+        self.icon_a_to_b.addPixmap(QPixmap("ui/icons/arrow-left.svg"), QIcon.Normal, QIcon.Off)
         self.ui.btn_merge_dir.setMaximumSize(23, 23)
-        self.change_merge_direction(False)
+        self.change_merge_direction()
         ##
 
         # Setup Tree Widgets
@@ -434,9 +434,10 @@ class ProfileMergerUI(QMainWindow):
                     value = not item.item_disabled
                 item_clicked.child(index).item_disabled = value
 
+
+
     def change_merge_direction(self, a_to_b=None):
         """Toggle or change the merge direction
-
         Args:
             a_to_b (bool): (Optional) sets the merge direction.
         """
@@ -447,21 +448,27 @@ class ProfileMergerUI(QMainWindow):
 
         if GlobalEstate.MERGE_A_TO_B:
             self.ui.btn_merge_dir.setIcon(self.icon_a_to_b)
+            self.apply_all_values(GlobalEstate.FROM_A)
+
         else:
             self.ui.btn_merge_dir.setIcon(self.icon_b_to_a)
+            self.apply_all_values(GlobalEstate.FROM_B)
 
-    """
+
     def apply_all_values(self, from_profile: str):
         if from_profile == GlobalEstate.FROM_A:
             fields_to_apply = GlobalEstate.A.PROPERTIES
-            items = GlobalEstate.Items.a
         else:
             fields_to_apply = GlobalEstate.B.PROPERTIES
-            items = GlobalEstate.Items.b
 
-        for item in items:
-            pprint(item.__dict__)
-    """
+        # Update the merged properties dictionary with the values from the specified profile
+        GlobalEstate.Merged.PROPERTIES.update(fields_to_apply)
+
+        # Update the merged tree widget with the new values
+        self.add_items(True)
+
+
+        
 
     def add_items(self, state: bool):
         if self.tree_target:

@@ -18,7 +18,6 @@ from utils import str_to_bool
 
 DEFAULT_API_VERSION = 54
 
-
 class ProfileFieldType:
     """Base Metadata class
     Args:
@@ -153,13 +152,13 @@ class ProfileApplicationVisibility(ProfileFieldType):
         self.model_id = f'{self.application}'
 
 
+#Removed dataCategories and visibility default is = ALL
 class ProfileCategoryGroupVisibility(ProfileFieldType):
     def __init__(
-        self, dataCategories=[], dataCategoryGroup='', visibility='',
+        self, dataCategoryGroup='', visibility='ALL',
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
-        self.dataCategories = dataCategories
         self.dataCategoryGroup = dataCategoryGroup
         self.__visibility = visibility
 
@@ -172,7 +171,11 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
     @visibility.setter
     def visibility(self, value):
-        self.__visibility = str_to_bool(value)
+        if value == "ALL":
+            self.__visibility = "ALL"
+        else:
+            self.__visibility = str_to_bool(value)
+
 
     @property
     def toggles(self):
@@ -183,7 +186,6 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
     @property
     def fields(self):
         return {
-            'dataCategories': self.dataCategories,
             'dataCategoryGroup': self.dataCategoryGroup,
             'visibility': self.visibility,
         }
@@ -371,17 +373,17 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
         self.model_id = f'{self.externalDataSource}'
 
 
+#readable por padrão tem que ser editable
 class ProfileFieldLevelSecurity(ProfileFieldType):
     def __init__(
-        self, editable=False, field='', readable=False, hidden=False,
+        self, editable=False, field='', readable=None, hidden=False,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
         self.__editable = editable
         self.field = field
         self.__hidden = hidden
-        self.__readable = readable
-
+        self.__readable = True if editable or readable is None else readable
         self.model_name = 'fieldLevelSecurities' if self.api_version <= 22 else 'fieldPermissions'
         self.__set_id__()
 
@@ -719,9 +721,10 @@ class ProfileApexPageAccess(ProfileFieldType):
         self.model_id = f'{self.apexPage}'
 
 
+#default changed to False
 class ProfileRecordTypeVisibility(ProfileFieldType):
     def __init__(
-        self, default=True, personAccountDefault=None, recordType='', visible=True,
+        self, default=False, personAccountDefault=None, recordType='', visible=True,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
