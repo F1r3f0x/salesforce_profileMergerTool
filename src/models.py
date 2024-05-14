@@ -17,7 +17,7 @@ Copyright: Patricio Labin Correa - 2019
 from typing import List
 from utils import str_to_bool
 
-DEFAULT_API_VERSION = 44
+DEFAULT_API_VERSION = 60
 
 
 class ProfileFieldType:
@@ -769,6 +769,141 @@ class ProfileUserPermission(ProfileFieldType):
         self.model_id = f'{self.name}'
 
 
+class ProfileCustomMetadataTypeAccess(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customMetadataTypeAccesses'
+        self.__set_id__()
+
+    @property
+    def enabled(self):
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self.__enabled = str_to_bool(value)
+
+    @property
+    def toggles(self):
+        return {
+            'enabled': self.enabled
+        }
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    def __set_id__(self):
+        return f'{self.name}'
+
+
+class ProfileCustomSettingAccess(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customSettingAccess'
+        self.__set_id__()
+
+    @property
+    def enabled(self):
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self.__enabled = str_to_bool(value)
+
+    @property
+    def toggles(self):
+        return {
+            'enabled': self.enabled
+        }
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    def __set_id__(self):
+        return f'{self.name}'
+
+
+class ProfileFlowAccess(ProfileFieldType):
+    def __init__(self, enabled=False, flow='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.flow = flow
+
+        self.model_name = 'flowAccess'
+        self.__set_id__()
+
+    @property
+    def enabled(self):
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self.__enabled = str_to_bool(value)
+
+    @property
+    def toggles(self):
+        return {
+            'enabled': self.enabled
+        }
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'flow': self.flow
+        }
+
+    def __set_id__(self):
+        return f'{self.flow}'
+
+
+class LoginFlow(ProfileFieldType):
+    def __init__(self, flow='', flow_type='UI', friendlyname='', uiLoginFlowType='',
+                useLightningRuntime='', vfFlowType='', vfFlowPageTitle='',
+                api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.flow = flow
+        self.flow_type = flow_type
+        self.friendlyname = friendlyname
+        self.uiLoginFlowType = uiLoginFlowType
+        self.useLightningRuntime = useLightningRuntime
+        self.vfFlowType = vfFlowType
+        self.vfFlowPageTitle = vfFlowPageTitle
+
+        self.model_name = 'loginFlow'
+        self.__set_id__()
+
+
+    @property
+    def fields(self):
+        return {
+            'flow': self.flow,
+            'flowType': self.flow_type,
+            'friendlyName': self.friendlyname,
+            'uiLoginFlowType': self.uiLoginFlowType,
+            'useLightningRuntime': self.useLightningRuntime,
+            'vfFlowType': self.vfFlowType,
+            'vfFlowPageTitle': self.vfFlowPageTitle
+        }
+
+    def __set_id__(self):
+        return f'{self.flow}: {self.friendlyname}'
+
+
 class ProfileSingleValue(ProfileFieldType):
     def __init__(self, model_name, value, is_boolean=False, api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
@@ -782,38 +917,49 @@ class ProfileSingleValue(ProfileFieldType):
 
 # TODO: handle different api versions
 classes_by_modelName = {
-    ProfileActionOverride().model_name: ProfileActionOverride,
-    ProfileApexClassAccess().model_name: ProfileApexClassAccess,
-    ProfileApexPageAccess().model_name: ProfileApexPageAccess,
     ProfileApplicationVisibility().model_name: ProfileApplicationVisibility,
     ProfileCategoryGroupVisibility().model_name: ProfileCategoryGroupVisibility,
+    ProfileApexClassAccess().model_name: ProfileApexClassAccess,
+    'custom': ProfileSingleValue,
+    ProfileCustomMetadataTypeAccess().model_name: ProfileCustomMetadataTypeAccess,
     ProfileCustomPermissions().model_name: ProfileCustomPermissions,
+    ProfileCustomSettingAccess().model_name: ProfileCustomSettingAccess,
+    'description': ProfileSingleValue,
     ProfileExternalDataSourceAccess().model_name: ProfileExternalDataSourceAccess,
     ProfileFieldLevelSecurity().model_name: ProfileFieldLevelSecurity,
+    ProfileFlowAccess().model_name: ProfileFlowAccess,
+    'fullName': ProfileSingleValue,
     ProfileLayoutAssignments().model_name: ProfileLayoutAssignments,
+    LoginFlow().model_name: LoginFlow,
     ProfileLoginHours().model_name: ProfileLoginHours,
     ProfileLoginIpRanges().model_name: ProfileLoginIpRanges,
     ProfileObjectPermissions().model_name: ProfileObjectPermissions,
+    ProfileApexPageAccess().model_name: ProfileApexPageAccess,
+    ProfileActionOverride().model_name: ProfileActionOverride,
     ProfileRecordTypeVisibility().model_name: ProfileRecordTypeVisibility,
     ProfileTabVisibility().model_name: ProfileTabVisibility,
-    ProfileUserPermission().model_name: ProfileUserPermission,
-    'custom': ProfileSingleValue,
-    'description': ProfileSingleValue,
-    'fullName': ProfileSingleValue,
-    'userLicense': ProfileSingleValue
+    'userLicense': ProfileSingleValue,
+    ProfileUserPermission().model_name: ProfileUserPermission
 }
 
 # TODO: Update API versions
 class Profile:
     def __init__(
-        self, applicationVisibilities: List[ProfileApplicationVisibility],
+        self,
+        applicationVisibilities: List[ProfileApplicationVisibility],
         categoryGroupVisibilities: List[ProfileCategoryGroupVisibility],
         classAccesses: List[ProfileApexClassAccess],
-        custom: bool, customPermissions: List[ProfileCustomPermissions],
+        custom: bool,
+        customMetadataTypeAcceses: List[ProfileCustomMetadataTypeAccess],
+        customPermissions: List[ProfileCustomPermissions],
+        customSettingAccesses: List[ProfileCustomSettingAccess],
         description: str,
         externalDataSourceAccesses: List[ProfileExternalDataSourceAccess],
         fieldPermissions: List[ProfileFieldLevelSecurity],
-        fullName: str, layoutAssignments: List[ProfileLayoutAssignments],
+        flowAccesses: List[ProfileFlowAccess],
+        fullName: str, 
+        layoutAssignments: List[ProfileLayoutAssignments],
+        loginFlows: List[LoginFlow],
         loginHours: List[ProfileLoginHours],
         loginIpRanges: List[ProfileLoginIpRanges],
         objectPermissions: List[ProfileObjectPermissions],
@@ -829,9 +975,12 @@ class Profile:
         self.classAccesses = classAccesses
         self.pageAccesses = pageAccesses
         self.tabVisibilities = tabVisibilities
+        self.loginFlows = loginFlows
+        if apiVersion >= 17:
+            self.userLicense = userLicense
+            self.loginIpRanges = loginIpRanges
         if apiVersion <= 22: self.fieldLevelSecurities = fieldPermissions
         else: self.fieldPermissions = fieldPermissions
-        if apiVersion >= 17: self.userLicense = userLicense
         if apiVersion >= 25: self.loginHours = loginHours
         if apiVersion >= 27: self.externalDataSourceAccesses = externalDataSourceAccesses
         if apiVersion >= 28: self.objectPermissions = objectPermissions
@@ -842,7 +991,10 @@ class Profile:
             self.custom = custom
             self.description = description
         if apiVersion >= 31: self.customPermissions = customPermissions
-        if apiVersion < 45: self.applicationVisibilities = applicationVisibilities
-        if apiVersion >= 41: self.categoryGroupVisibilities = categoryGroupVisibilities
-        if apiVersion >= 17: self.loginIpRanges = loginIpRanges
         if apiVersion >= 37 and apiVersion <= 44: self.profileActionOverrides = profileActionOverrides
+        if apiVersion >= 41: self.categoryGroupVisibilities = categoryGroupVisibilities
+        if apiVersion < 45: self.applicationVisibilities = applicationVisibilities
+        if apiVersion >= 47:
+            self.customMetadataTypeAcceses = customMetadataTypeAcceses
+            self.customSettingAccesses = customSettingAccesses
+            self.flowAccesses = flowAccesses
