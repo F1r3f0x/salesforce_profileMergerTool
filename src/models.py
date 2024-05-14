@@ -19,7 +19,6 @@ from utils import str_to_bool
 
 DEFAULT_API_VERSION = 60
 
-
 class ProfileFieldType:
     """Base Metadata class
     Args:
@@ -158,13 +157,13 @@ class ProfileApplicationVisibility(ProfileFieldType):
         self.model_id = f'{self.application}'
 
 
+#Removed dataCategories and visibility default is = ALL
 class ProfileCategoryGroupVisibility(ProfileFieldType):
     def __init__(
-        self, dataCategories=[], dataCategoryGroup='', visibility='',
+        self, dataCategoryGroup='', visibility='ALL',
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
-        self.dataCategories = dataCategories
         self.dataCategoryGroup = dataCategoryGroup
         self.__visibility = visibility
 
@@ -177,7 +176,11 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
     @visibility.setter
     def visibility(self, value):
-        self.__visibility = str_to_bool(value)
+        if value == "ALL":
+            self.__visibility = "ALL"
+        else:
+            self.__visibility = str_to_bool(value)
+
 
     @property
     def toggles(self):
@@ -188,7 +191,6 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
     @property
     def fields(self):
         return {
-            'dataCategories': self.dataCategories,
             'dataCategoryGroup': self.dataCategoryGroup,
             'visibility': self.visibility,
         }
@@ -280,6 +282,63 @@ class ProfileCustomPermissions(ProfileFieldType):
         self.model_id = f'{self.name}'
 
 
+class ProfileCustomMetadataTypeAccess(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customMetadataTypeAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.name}: {self.enabled}'
+        else:
+            self.model_id = f'{self.name}'
+
+
+
+class ProfileCustomSettingAccesses(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customSettingAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.name}: {self.enabled}'
+        else:
+            self.model_id = f'{self.name}'
+
+
 class ProfileExternalDataSourceAccess(ProfileFieldType):
     def __init__(self, enabled=False, externalDataSource='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
@@ -319,17 +378,17 @@ class ProfileExternalDataSourceAccess(ProfileFieldType):
         self.model_id = f'{self.externalDataSource}'
 
 
+#readable por padrão tem que ser editable
 class ProfileFieldLevelSecurity(ProfileFieldType):
     def __init__(
-        self, editable=False, field='', readable=False, hidden=False,
+        self, editable=False, field='', readable=None, hidden=False,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
         self.__editable = editable
         self.field = field
         self.__hidden = hidden
-        self.__readable = readable
-
+        self.__readable = True if editable or readable is None else readable
         self.model_name = 'fieldLevelSecurities' if self.api_version <= 22 else 'fieldPermissions'
         self.__set_id__()
 
@@ -391,6 +450,32 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
     def __set_id__(self):
         self.model_id = f'{self.field}'
 
+class ProfileFlowAccess(ProfileFieldType):
+    def __init__(self, enabled=False, flow='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.flow = flow
+
+        self.model_name = 'flowAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'flow': self.flow
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.enabled != False:
+            self.model_id = f'{self.flow}: {self.enabled}'
+        else:
+            self.model_id = f'{self.flow}'
 
 class ProfileLayoutAssignments(ProfileFieldType):
     def __init__(self, layout='', recordType='', api_version=DEFAULT_API_VERSION):
@@ -641,9 +726,10 @@ class ProfileApexPageAccess(ProfileFieldType):
         self.model_id = f'{self.apexPage}'
 
 
+#default changed to False
 class ProfileRecordTypeVisibility(ProfileFieldType):
     def __init__(
-        self, default=True, personAccountDefault=None, recordType='', visible=True,
+        self, default=False, personAccountDefault=None, recordType='', visible=True,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
@@ -968,7 +1054,10 @@ class Profile:
         recordTypeVisibilities: List[ProfileRecordTypeVisibility],
         tabVisibilities: List[ProfileTabVisibility],
         userLicense: str, userPermissions: List[ProfileUserPermission],
-        apiVersion=DEFAULT_API_VERSION
+        flowAccesses: List[ProfileFlowAccess],
+        customSettingAccesses: List[ProfileCustomSettingAccesses],
+        customMetadataTypeAccesses: List[ProfileCustomMetadataTypeAccess],
+        apiVersion=DEFAULT_API_VERSION,
     ):
         self.fullName = fullName
         self.layoutAssignments = layoutAssignments
