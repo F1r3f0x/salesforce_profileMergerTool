@@ -24,6 +24,24 @@ PROFILE_MERGED = 'AB'
 DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
 LOGFILE_NAME = 'profilemerger'
 
+@dataclass
+class ValueMerge:
+    field_id: str
+    field_ref: models.ProfileFieldType
+    values_a: list
+    values_b: list
+
+    @property
+    def is_different(self) -> bool:
+        for value_name, value_a in self.values_a.items():
+            value_b = self.values_b.get(value_name)
+            if value_a != value_b:
+                return True
+        return False
+
+    def __str__(self) -> str:
+        return f'{self.field_id} || {self.values_a}  --> {self.values_b}'
+
 
 class Profile:
     """This class handles profile scanning, field generation and saving.
@@ -33,6 +51,8 @@ class Profile:
         file_path (str): Path to the Salesforce profile file.
         namespace (str): Profile namespace.
         fields (dict): Profile fields container.
+        is_merged (bool): If the profile is merged.
+        diffs (list[ValueMerge]): Differences between the two profiles.
     """
 
     def __init__(self, name: str, file_path: str = None, namespace=None, *args, **kwargs):
@@ -40,7 +60,9 @@ class Profile:
         self.file_path = file_path
         self.namespace = None
         self.__fields = {}
-        
+        self.is_merged = False
+        self.__diffs = []
+
         if file_path and not file_path.isspace():
             self.scan_file(file_path)
 
@@ -146,7 +168,7 @@ class Profile:
         # Write to the selected path
         with open(self.file_path, 'w', encoding='utf-8') as file_pointer:
             file_pointer.write(xml_str)
-        
+
         return True
 
 
@@ -200,53 +222,64 @@ class Profile:
         self.fields.clear()
 
 
+
+    @property
+    def diffs(self) -> list[ValueMerge]:
+        return self.__diffs
+
+
+    @diffs.setter
+    def diffs(self, diffs: list):
+        self.__diffs = diffs
+
+
     def __str__(self) -> str:
         return f'Profile {self.name}: File Path="{self.file_path}" Fields Qty={len(self.fields)}'
 
 
 class ProfileMerger:
     """This class handles the merges
-    
+
     Attributes:
 
     """
-    
-    
-    def __init__(self, profile_a_path: str , profile_b_path: str, *args, **kwargs):
-        self.profile_a = Profile(PROFILE_A, profile_a_path)
-        self.profile_b = Profile(PROFILE_B, profile_b_path)
+
+    def __init__(self, profile_a_path: str = None , profile_b_path: str = None, profile_a: Profile = None, profile_b: Profile = None, *args, **kwargs):
+        self.profile_a = Profile(PROFILE_A, profile_a_path) if profile_a_path is not None else profile_a
+        self.profile_b = Profile(PROFILE_B, profile_b_path) if profile_b_path is not None else profile_b
         self.profile_merged = Profile(PROFILE_MERGED)
         self.profiles = [self.profile_a, self.profile_b, self.profile_merged]
         self.merge_a_to_b = False
 
 
+
     def merge(self, profile_a_path: str=None , profile_b_path: str=None) -> Profile:
-        
+
         self.profile_merged.clear()
-        
+
         if profile_a_path and not profile_a_path.isspace():
             self.profile_a.scan_file(profile_a_path)
-            
+
         if profile_b_path and not profile_b_path.isspace():
             self.profile_b.scan_file(profile_b_path)
 
         profiles = (self.profile_b, self.profile_a)
         if not self.merge_a_to_b:
             profiles = profiles[::-1]
-            
+
         base = profiles[0]
         other = profiles[1]
-        
+
         logging.info(f'Base Profile {base}')
         logging.info(f'Other Profile {other}')
-        
+
         # Add base fields to merged profile
         base_fields = base.fields
         for _id, field in base_fields.items():
             self.profile_merged.fields[_id] = field
             logging.debug(f'Added field to merge profile: {_id}{field}')
-        base.is_meged = True
-                
+        base.is_merged = True
+
         # Add other fields to merge profile, log the diffs
         other_fields = other.fields
         diffs = []
@@ -257,42 +290,47 @@ class ProfileMerger:
                 logging.debug(f'Merged values: {value_merge}')
                 if value_merge.is_different:
                     diffs.append(value_merge)
-                
+
             self.profile_merged.fields[_id] = field
         other.is_merged = True
-        
+
+        if (base.is_merged and other.is_merged):
+            self.profile_merged.is_merged = True
+            self.profile_merged.diffs = diffs
+
         for i, diff in enumerate(diffs):
             logging.info(f'Difference {i}: {diff}')
-        
+
         return self.profile_merged
-    
-    
+
+
     def merge_and_save(self, profile_a_path: str=None , profile_b_path: str=None) -> bool:
         self.merge(profile_a_path, profile_b_path)
         return self.profile_merged.save_file()
 
 
-@dataclass
-class ValueMerge:
-    field_id: str
-    field_ref: models.ProfileFieldType
-    values_a: list
-    values_b: list
-    
-    @property
-    def is_different(self) -> bool:
-        for value_name, value_a in self.values_a.items():
-            value_b = self.values_b.get(value_name)
-            if value_a != value_b:
-                return True
-        return False
-    
-    def __str__(self) -> str:
-        return f'{self.field_id} || {self.values_a}  --> {self.values_b}'
-    
+def parse_args():
+    """
+    Parses command line arguments to create a Profile Merger.
+
+    Returns:
+        argparse.Namespace: The parsed arguments.
+
+    Raises:
+        SystemExit: If required arguments are missing.
+    """
+    parser = argparse.ArgumentParser(description='Profile Merger')
+    parser.add_argument('-a', '--profile_a', required=True, help='Path to Profile A')
+    parser.add_argument('-b', '--profile_b', required=True, help='Path to Profile B')
+    parser.add_argument('-o', '--output', required=True, help='Output file')
+    parser.add_argument('-l', '--log', default=LOGFILE_NAME, help='Log file name')
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    setup_logging(LOGFILE_NAME)
-    
-    merger = ProfileMerger('tests/test_a.profile', 'tests/test_b.profile')
+    args = parse_args()
+    setup_logging(args.log)
+
+    merger = ProfileMerger(args.profile_a, args.profile_b)
     merger.merge_and_save()
-    
