@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ SF Profile Merger - Metadata Models.
 
-This module has the definitions for the differente Metadata types for Salesforce Profiles.
+This module has the definitions for the different Metadata types for Salesforce Profiles.
 Checkout the docs:
     https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_profile.htm
 
@@ -1054,8 +1054,6 @@ class Profile:
         recordTypeVisibilities: List[ProfileRecordTypeVisibility],
         tabVisibilities: List[ProfileTabVisibility],
         userLicense: str, userPermissions: List[ProfileUserPermission],
-        flowAccesses: List[ProfileFlowAccess],
-        customSettingAccesses: List[ProfileCustomSettingAccesses],
         customMetadataTypeAccesses: List[ProfileCustomMetadataTypeAccess],
         apiVersion=DEFAULT_API_VERSION,
     ):
