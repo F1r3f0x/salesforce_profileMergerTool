@@ -272,25 +272,37 @@ class ProfileMerger:
 
         logging.info(f'Base Profile {base}')
         logging.info(f'Other Profile {other}')
+        
+        diffs = []
 
         # Add base fields to merged profile
         base_fields = base.fields
         for _id, field in base_fields.items():
             self.profile_merged.fields[_id] = field
             logging.debug(f'Added field to merge profile: {_id}{field}')
+            
+            # Track non existing fields in the other profile
+            if not other.fields.get(_id):
+                value_merge = ValueMerge(_id, field, None, field.fields)
+                diffs.append(value_merge)
+                logging.debug(f'Missing Field: {value_merge}')
+            
+            
         base.is_merged = True
 
         # Add other fields to merge profile, log the diffs
         other_fields = other.fields
-        diffs = []
         for _id, field in other_fields.items():
             merged_field = self.profile_merged.fields.get(_id)
             if merged_field:
                 value_merge = ValueMerge(_id, field, merged_field.fields, field.fields)
-                logging.debug(f'Merged values: {value_merge}')
+                logging.debug(f'Different Field: {value_merge}')
                 if value_merge.is_different:
                     diffs.append(value_merge)
-
+            else:
+                value_merge = ValueMerge(_id, None, field, field.fields)
+                logging.debug(f'Added Field: {value_merge}')
+                diffs.append(value_merge)
             self.profile_merged.fields[_id] = field
         other.is_merged = True
 
