@@ -310,7 +310,7 @@ class ProfileMerger:
             self.profile_merged.is_merged = True
             self.profile_merged.diffs = diffs
 
-        for i, diff in enumerate(diffs):
+        for i, diff in enumerate(sorted(diffs, key=lambda x: x.field_id), 1): 
             logging.info(f'Difference {i}: {diff}')
 
         return self.profile_merged

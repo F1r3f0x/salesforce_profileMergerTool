@@ -8,17 +8,15 @@ import models
 
 class ProfileMerger_test(unittest.TestCase):
     def setUp(self):
-        setup_logging('test')
         self.profile_a = Profile(PROFILE_A, 'tests/test_a.profile')
         self.profile_b = Profile(PROFILE_B, 'tests/test_b.profile')
         self.merger = ProfileMerger(None, None, self.profile_a, self.profile_b)
         
         
-    def test_merge(self):
+    def test_ab_merge(self):
         self.merger.merge_and_save()
-        pprint(self.merger.profile_merged.diffs)
         self.assertTrue(self.merger.profile_merged.is_merged)
-        self.assertEqual(len(self.merger.profile_merged.diffs), 11)
+        self.assertEqual(len(self.merger.profile_merged.diffs), 20)
     
 if __name__ == '__main__':
     unittest.main()

@@ -11,3 +11,4 @@ tests/my_scripts
 
 .venv
 profilemerger.log
+merged_profile.profile
