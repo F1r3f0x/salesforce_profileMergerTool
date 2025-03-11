@@ -1003,7 +1003,7 @@ class Profile:
         custom: bool,
         customMetadataTypeAcceses: List[ProfileCustomMetadataTypeAccess],
         customPermissions: List[ProfileCustomPermissions],
-        customSettingAccesses: List[ProfileCustomSettingAccess],
+        customSettingAccesses: List[ProfileCustomSettingAccesses],
         description: str,
         externalDataSourceAccesses: List[ProfileExternalDataSourceAccess],
         fieldPermissions: List[ProfileFieldLevelSecurity],
