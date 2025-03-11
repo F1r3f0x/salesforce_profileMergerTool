@@ -17,7 +17,7 @@ Copyright: Patricio Labin Correa - 2019
 from typing import List
 from utils import str_to_bool
 
-DEFAULT_API_VERSION = 63
+DEFAULT_API_VERSION = 60
 
 class ProfileFieldType:
     """Base Metadata class
@@ -55,7 +55,6 @@ class ProfileFieldType:
     @fields.setter
     def fields(self, input_fields: dict):
         self._set_fields(input_fields)
-        self.__set_id__()
 
     @property
     def id(self) -> str:
@@ -72,9 +71,9 @@ class ProfileFieldType:
 class ProfileActionOverride(ProfileFieldType):
     def __init__(
         self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='',
-        f_type=''
+        f_type='', api_version=DEFAULT_API_VERSION
     ):
-        super().__init__()
+        super().__init__(api_version)
         self.actionName = actionName
         self.content = content
         self.formFactor = formFactor
@@ -96,15 +95,21 @@ class ProfileActionOverride(ProfileFieldType):
             'type': self.type,
         }
 
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
     def __set_id__(self):
         self.model_id = f'{self.actionName}: {self.content}: {self.pageOrSobjectType}: {self.type}'
 
 
 class ProfileApplicationVisibility(ProfileFieldType):
     def __init__(
-        self, application='', default=False, visible=False
+        self, application='', default=False, visible=False,
+        api_version=DEFAULT_API_VERSION
     ):
-        super().__init__()
+        super().__init__(api_version)
         self.application = application
         self.__default = default
         self.__visible = visible
@@ -143,38 +148,65 @@ class ProfileApplicationVisibility(ProfileFieldType):
             'visible': self.visible
         }
 
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
     def __set_id__(self):
-        self.model_id = f'{self.application}: Default: {self.default}: Visible: {self.visible}'
+        self.model_id = f'{self.application}'
 
 
-# TODO: Test dataCategories
+#Removed dataCategories and visibility default is = ALL
 class ProfileCategoryGroupVisibility(ProfileFieldType):
     def __init__(
-        self, dataCategories='', dataCategoryGroup='', visibility=''
+        self, dataCategoryGroup='', visibility='ALL',
+        api_version=DEFAULT_API_VERSION
     ):
-        super().__init__()
-        self.dataCategories = dataCategories
+        super().__init__(api_version)
         self.dataCategoryGroup = dataCategoryGroup
-        self.visibility = visibility
+        self.__visibility = visibility
 
         self.model_name = 'categoryGroupVisibilities'
         self.__set_id__()
 
     @property
+    def visibility(self):
+        return self.__visibility
+
+    @visibility.setter
+    def visibility(self, value):
+        if value == "ALL":
+            self.__visibility = "ALL"
+        else:
+            self.__visibility = str_to_bool(value)
+
+
+    @property
+    def toggles(self):
+        return {
+            'visibility': self.visibility
+        }
+
+    @property
     def fields(self):
         return {
-            'dataCategories': self.dataCategories,
             'dataCategoryGroup': self.dataCategoryGroup,
             'visibility': self.visibility,
         }
 
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
     def __set_id__(self):
-        self.model_id = f'{self.dataCategoryGroup}: {self.dataCategories}: {self.visibility}'
+        self.model_id = f'{self.dataCategoryGroup}'
 
 
 class ProfileApexClassAccess(ProfileFieldType):
-    def __init__(self, apexClass='', enabled=False):
-        super().__init__()
+    def __init__(self, apexClass='', enabled=False, api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
         self.apexClass = apexClass
         self.__enabled = enabled
 
@@ -202,8 +234,13 @@ class ProfileApexClassAccess(ProfileFieldType):
             'enabled': self.enabled
         }
 
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
     def __set_id__(self):
-        self.model_id = f'{self.apexClass}: {self.enabled}'
+        self.model_id = f'{self.apexClass}'
 
 
 class ProfileCustomPermissions(ProfileFieldType):
@@ -525,7 +562,7 @@ class ProfileLoginIpRanges(ProfileFieldType):
 class ProfileObjectPermissions(ProfileFieldType):
     def __init__(
         self, allowCreate=False, allowDelete=False, allowEdit=False,
-        allowRead=False, modifyAllRecords=False, f_object='', viewAllFields=False, viewAllRecords=False,
+        allowRead=False, modifyAllRecords=False, f_object='', viewAllRecords=False,
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
@@ -535,8 +572,7 @@ class ProfileObjectPermissions(ProfileFieldType):
         self.__allowRead = allowRead
         self.__modifyAllRecords = modifyAllRecords
         self.object = f_object
-        self.__viewAllFields = viewAllFields
-        self.__viewAllRecords = viewAllRecords  # Added on 63.0
+        self.__viewAllRecords = viewAllRecords
 
         self.model_name = 'objectPermissions'
         self.__set_id__()
