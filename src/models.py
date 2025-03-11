@@ -67,7 +67,54 @@ class ProfileFieldType:
         return f'<{self.model_name}: {self.model_id}>'
 
 
-# Metadata Classes
+#### Metadata Classes #####
+
+class LoginFlow(ProfileFieldType):
+    def __init__(self, flow='', flow_type='UI', friendlyname='', uiLoginFlowType='',
+                useLightningRuntime=False, vfFlowType='', vfFlowPageTitle='',
+                api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.flow = flow
+        self.flow_type = flow_type
+        self.friendlyname = friendlyname
+        self.uiLoginFlowType = uiLoginFlowType
+        self.useLightningRuntime = useLightningRuntime
+        self.vfFlowType = vfFlowType
+        self.vfFlowPageTitle = vfFlowPageTitle
+
+        self.model_name = 'loginFlow'
+        self.__set_id__()
+        
+    @property
+    def uiLoginFlowType(self):
+        return self.__uiLoginFlowType
+
+    @uiLoginFlowType.setter
+    def uiLoginFlowType(self, value):
+        self.__uiLoginFlowType = str_to_bool(value)
+        
+    @property
+    def toggles(self):
+        return {
+            'uiLoginFlowType': self.uiLoginFlowType
+        }
+
+    @property
+    def fields(self):
+        return {
+            'flow': self.flow,
+            'flowType': self.flow_type,
+            'friendlyName': self.friendlyname,
+            'uiLoginFlowType': self.uiLoginFlowType,
+            'useLightningRuntime': self.useLightningRuntime,
+            'vfFlowType': self.vfFlowType,
+            'vfFlowPageTitle': self.vfFlowPageTitle
+        }
+
+    def __set_id__(self):
+        return f'{self.flow}: {self.friendlyname}'
+
+
 class ProfileActionOverride(ProfileFieldType):
     def __init__(
         self, actionName='', content='', formFactor='', pageOrSobjectType='', recordType='',
@@ -160,37 +207,21 @@ class ProfileApplicationVisibility(ProfileFieldType):
 #Removed dataCategories and visibility default is = ALL
 class ProfileCategoryGroupVisibility(ProfileFieldType):
     def __init__(
-        self, dataCategoryGroup='', visibility='ALL',
+        self, dataCategories = '', dataCategoryGroup='', visibility='ALL',
         api_version=DEFAULT_API_VERSION
     ):
         super().__init__(api_version)
+        self.dataCategories = dataCategories
         self.dataCategoryGroup = dataCategoryGroup
-        self.__visibility = visibility
+        self.visibility = visibility
 
         self.model_name = 'categoryGroupVisibilities'
         self.__set_id__()
 
     @property
-    def visibility(self):
-        return self.__visibility
-
-    @visibility.setter
-    def visibility(self, value):
-        if value == "ALL":
-            self.__visibility = "ALL"
-        else:
-            self.__visibility = str_to_bool(value)
-
-
-    @property
-    def toggles(self):
-        return {
-            'visibility': self.visibility
-        }
-
-    @property
     def fields(self):
         return {
+            'dataCategories': self.dataCategories,
             'dataCategoryGroup': self.dataCategoryGroup,
             'visibility': self.visibility,
         }
@@ -202,6 +233,31 @@ class ProfileCategoryGroupVisibility(ProfileFieldType):
 
     def __set_id__(self):
         self.model_id = f'{self.dataCategoryGroup}'
+
+
+class ProfileCustomMetadataTypeAccess(ProfileFieldType):
+    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
+        super().__init__(api_version)
+        self.enabled = enabled
+        self.name = name
+
+        self.model_name = 'customMetadataTypeAccesses'
+        self.__set_id__()
+
+    @property
+    def fields(self):
+        return {
+            'enabled': self.enabled,
+            'name': self.name
+        }
+
+    @fields.setter
+    def fields(self, input_dict: dict):
+        self._set_fields(input_dict)
+        self.__set_id__()
+
+    def __set_id__(self):
+            self.model_id = f'{self.name}'
 
 
 class ProfileApexClassAccess(ProfileFieldType):
@@ -282,35 +338,6 @@ class ProfileCustomPermissions(ProfileFieldType):
         self.model_id = f'{self.name}'
 
 
-class ProfileCustomMetadataTypeAccess(ProfileFieldType):
-    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
-        super().__init__(api_version)
-        self.enabled = enabled
-        self.name = name
-
-        self.model_name = 'customMetadataTypeAccesses'
-        self.__set_id__()
-
-    @property
-    def fields(self):
-        return {
-            'enabled': self.enabled,
-            'name': self.name
-        }
-
-    @fields.setter
-    def fields(self, input_dict: dict):
-        self._set_fields(input_dict)
-        self.__set_id__()
-
-    def __set_id__(self):
-        if self.enabled != False:
-            self.model_id = f'{self.name}: {self.enabled}'
-        else:
-            self.model_id = f'{self.name}'
-
-
-
 class ProfileCustomSettingAccesses(ProfileFieldType):
     def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
         super().__init__(api_version)
@@ -319,7 +346,21 @@ class ProfileCustomSettingAccesses(ProfileFieldType):
 
         self.model_name = 'customSettingAccesses'
         self.__set_id__()
+        
+    @property
+    def enabled(self):
+        return self.__enabled
 
+    @enabled.setter
+    def enabled(self, value):
+        self.__enabled = str_to_bool(value)
+
+    @property
+    def toggles(self):
+        return {
+            'enabled': self.enabled
+        }
+    
     @property
     def fields(self):
         return {
@@ -333,10 +374,7 @@ class ProfileCustomSettingAccesses(ProfileFieldType):
         self.__set_id__()
 
     def __set_id__(self):
-        if self.enabled != False:
-            self.model_id = f'{self.name}: {self.enabled}'
-        else:
-            self.model_id = f'{self.name}'
+        self.model_id = f'{self.name}'
 
 
 class ProfileExternalDataSourceAccess(ProfileFieldType):
@@ -387,8 +425,10 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
         super().__init__(api_version)
         self.__editable = editable
         self.field = field
-        self.__hidden = hidden
-        self.__readable = True if editable or readable is None else readable
+        if api_version <= 22:
+            self.__hidden = hidden
+        if api_version >= 23:
+            self.__readable = readable
         self.model_name = 'fieldLevelSecurities' if self.api_version <= 22 else 'fieldPermissions'
         self.__set_id__()
 
@@ -418,22 +458,24 @@ class ProfileFieldLevelSecurity(ProfileFieldType):
 
     @property
     def toggles(self):
-        toggles = {
-            'editable': self.editable,
-            'readable': self.readable
-        }
         if self.api_version <= 22:
-            toggles['hidden'] = self.hidden
-        return toggles
+            return {
+                'editable': self.editable,
+                'hidden': self.hidden,
+            }
+        else:
+            return {
+                'editable': self.editable,
+                'readable': self.readable
+            }
 
     @property
     def fields(self):
         if self.api_version <= 22:
             return {
                     'editable': self.editable,
-                    'hidden': self.hidden,
                     'field': self.field,
-                    'readable': self.readable
+                    'hidden': self.hidden,
                 }
         else:
             return {
@@ -458,6 +500,20 @@ class ProfileFlowAccess(ProfileFieldType):
 
         self.model_name = 'flowAccesses'
         self.__set_id__()
+        
+    @property
+    def enabled(self):
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self.__enabled = str_to_bool(value)
+        
+    @property
+    def toggles(self):
+        return {
+            'enabled': self.enabled
+        }
 
     @property
     def fields(self):
@@ -726,7 +782,6 @@ class ProfileApexPageAccess(ProfileFieldType):
         self.model_id = f'{self.apexPage}'
 
 
-#default changed to False
 class ProfileRecordTypeVisibility(ProfileFieldType):
     def __init__(
         self, default=False, personAccountDefault=None, recordType='', visible=True,
@@ -767,20 +822,33 @@ class ProfileRecordTypeVisibility(ProfileFieldType):
 
     @property
     def toggles(self):
-        return {
-            'default': self.default,
-            'personAccountDefault': self.personAccountDefault,
-            'visible': self.visible
-        }
+        if self.personAccountDefault is None:
+            return {
+                'default': self.default,
+                'visible': self.visible
+            }
+        else:
+            return {
+                'default': self.default,
+                'personAccountDefault': self.personAccountDefault,
+                'visible': self.visible
+            }
 
     @property
     def fields(self):
-        return {
-            'default': self.default,
-            'personAccountDefault': self.personAccountDefault,
-            'recordType': self.recordType,
-            'visible': self.visible
-        }
+        if self.personAccountDefault is None:
+            return {
+                'default': self.default,
+                'recordType': self.recordType,
+                'visible': self.visible
+            }
+        else:
+            return {
+                'default': self.default,
+                'personAccountDefault': self.personAccountDefault,
+                'recordType': self.recordType,
+                'visible': self.visible
+            } 
 
     @fields.setter
     def fields(self, input_dict: dict):
@@ -887,107 +955,6 @@ class ProfileCustomMetadataTypeAccess(ProfileFieldType):
 
     def __set_id__(self):
         return f'{self.name}'
-
-
-class ProfileCustomSettingAccess(ProfileFieldType):
-    def __init__(self, enabled=False, name='', api_version=DEFAULT_API_VERSION):
-        super().__init__(api_version)
-        self.enabled = enabled
-        self.name = name
-
-        self.model_name = 'customSettingAccess'
-        self.__set_id__()
-
-    @property
-    def enabled(self):
-        return self.__enabled
-
-    @enabled.setter
-    def enabled(self, value):
-        self.__enabled = str_to_bool(value)
-
-    @property
-    def toggles(self):
-        return {
-            'enabled': self.enabled
-        }
-
-    @property
-    def fields(self):
-        return {
-            'enabled': self.enabled,
-            'name': self.name
-        }
-
-    def __set_id__(self):
-        return f'{self.name}'
-
-
-class ProfileFlowAccess(ProfileFieldType):
-    def __init__(self, enabled=False, flow='', api_version=DEFAULT_API_VERSION):
-        super().__init__(api_version)
-        self.enabled = enabled
-        self.flow = flow
-
-        self.model_name = 'flowAccess'
-        self.__set_id__()
-
-    @property
-    def enabled(self):
-        return self.__enabled
-
-    @enabled.setter
-    def enabled(self, value):
-        self.__enabled = str_to_bool(value)
-
-    @property
-    def toggles(self):
-        return {
-            'enabled': self.enabled
-        }
-
-    @property
-    def fields(self):
-        return {
-            'enabled': self.enabled,
-            'flow': self.flow
-        }
-
-    def __set_id__(self):
-        return f'{self.flow}'
-
-
-class LoginFlow(ProfileFieldType):
-    def __init__(self, flow='', flow_type='UI', friendlyname='', uiLoginFlowType='',
-                useLightningRuntime='', vfFlowType='', vfFlowPageTitle='',
-                api_version=DEFAULT_API_VERSION):
-        super().__init__(api_version)
-        self.flow = flow
-        self.flow_type = flow_type
-        self.friendlyname = friendlyname
-        self.uiLoginFlowType = uiLoginFlowType
-        self.useLightningRuntime = useLightningRuntime
-        self.vfFlowType = vfFlowType
-        self.vfFlowPageTitle = vfFlowPageTitle
-
-        self.model_name = 'loginFlow'
-        self.__set_id__()
-
-
-    @property
-    def fields(self):
-        return {
-            'flow': self.flow,
-            'flowType': self.flow_type,
-            'friendlyName': self.friendlyname,
-            'uiLoginFlowType': self.uiLoginFlowType,
-            'useLightningRuntime': self.useLightningRuntime,
-            'vfFlowType': self.vfFlowType,
-            'vfFlowPageTitle': self.vfFlowPageTitle
-        }
-
-    def __set_id__(self):
-        return f'{self.flow}: {self.friendlyname}'
 
 
 class ProfileSingleValue(ProfileFieldType):
