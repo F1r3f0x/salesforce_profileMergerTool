@@ -968,7 +968,6 @@ class ProfileSingleValue(ProfileFieldType):
         self.model_id = f'{self.model_name}'
 
 
-# TODO: handle different api versions
 classes_by_modelName = {
     ProfileApplicationVisibility().model_name: ProfileApplicationVisibility,
     ProfileCategoryGroupVisibility().model_name: ProfileCategoryGroupVisibility,
@@ -976,7 +975,7 @@ classes_by_modelName = {
     'custom': ProfileSingleValue,
     ProfileCustomMetadataTypeAccess().model_name: ProfileCustomMetadataTypeAccess,
     ProfileCustomPermissions().model_name: ProfileCustomPermissions,
-    ProfileCustomSettingAccess().model_name: ProfileCustomSettingAccess,
+    ProfileCustomSettingAccesses().model_name: ProfileCustomSettingAccesses,
     'description': ProfileSingleValue,
     ProfileExternalDataSourceAccess().model_name: ProfileExternalDataSourceAccess,
     ProfileFieldLevelSecurity().model_name: ProfileFieldLevelSecurity,
@@ -995,7 +994,6 @@ classes_by_modelName = {
     ProfileUserPermission().model_name: ProfileUserPermission
 }
 
-# TODO: Update API versions
 class Profile:
     def __init__(
         self,
