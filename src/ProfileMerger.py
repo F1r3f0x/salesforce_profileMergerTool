@@ -147,7 +147,7 @@ class Profile:
                     sub_element = ElementTree.SubElement(xml_root, model_field.model_name)
                     if model_field.fields:
                         for field, value in model_field.fields.items():
-                            if value and value != '':
+                            if value is not None and value != '':
                                 if type(value) is bool:
                                     value = str(value).lower()
                                 ElementTree.SubElement(sub_element, field).text = value

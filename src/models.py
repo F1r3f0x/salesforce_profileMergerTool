@@ -17,7 +17,7 @@ Copyright: Patricio Labin Correa - 2019
 from typing import List
 from utils import str_to_bool
 
-DEFAULT_API_VERSION = 60
+DEFAULT_API_VERSION = 63
 
 class ProfileFieldType:
     """Base Metadata class
