@@ -340,9 +340,13 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
     setup_logging(args.log)
 
     merger = ProfileMerger(args.profile_a, args.profile_b)
     merger.merge_and_save()
+
+
+if __name__ == '__main__':
+    main()
