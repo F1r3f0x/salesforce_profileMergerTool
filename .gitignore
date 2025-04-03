@@ -1,14 +1,14 @@
 __pycache__
 .vscode
+.venv
+.coverage
 pyenv
 tutorials
 build
 dist
 output.profile
+profilemerger.log
 ui/transferui.py
 tests/my_scripts
 /test_output.profile
-
-.venv
-profilemerger.log
 merged_profile.profile

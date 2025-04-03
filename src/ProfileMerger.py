@@ -15,17 +15,25 @@ from xml.dom import minidom
 from dataclasses import dataclass
 
 import models
-from utils import setup_logging
 
 
 PROFILE_A = 'A'
 PROFILE_B = 'B'
 PROFILE_MERGED = 'AB'
 DEFAULT_OUTPUT_PATH = 'merged_profile.profile'
-LOGFILE_NAME = 'profilemerger'
+
 
 @dataclass
 class ValueMerge:
+    """
+        This class represents a difference between two fields.
+        
+        Attributes:
+            field_id (str): Field id (key in the fields dict).
+            field_ref (models.ProfileFieldType): Type field Reference.
+            values_a (list): List of values in profile A.
+            values_b (list): List of values in profile B.
+    """
     field_id: str
     field_ref: models.ProfileFieldType
     values_a: list
@@ -63,7 +71,7 @@ class Profile:
         self.is_merged = False
         self.__diffs = []
 
-        if file_path and not file_path.isspace():
+        if file_path and not file_path.isspace() and name != PROFILE_MERGED:
             self.scan_file(file_path)
 
 
@@ -94,10 +102,16 @@ class Profile:
             namespace_value = namespace.replace('{', '').replace('}', '')
             self.namespace = namespace_value
 
+            # Get field type
             field_type_name = profile_field_element.tag.replace(namespace, '')
 
-            # TODO: create exception and handle if not found
+            # Get the associated class from the models dictionary
             model_class = models.classes_by_modelName.get(field_type_name)
+            
+            if model_class is None:
+                raise Exception(
+                    f'ProfileMerger: Unknown field type: {field_type_name}'
+                )
 
             if model_class:
                 # Read metadata from xml
@@ -107,13 +121,17 @@ class Profile:
                     fields[tag] = element_child.text
 
                 profile_field = None
+                # Check for fields with a single value
                 if model_class is models.ProfileSingleValue:
+                    # Custom is a boolean
                     if field_type_name == 'custom':
                         profile_field = model_class(
                             field_type_name, profile_field_element.text, is_boolean=True
                         )
+                    # The rest are just treated as strings
                     else:
                         profile_field = model_class(field_type_name, profile_field_element.text)
+                # All the other classes
                 else:
                     profile_field = model_class()
                     profile_field.fields = fields
@@ -244,10 +262,10 @@ class ProfileMerger:
 
     """
 
-    def __init__(self, profile_a_path: str = None , profile_b_path: str = None, profile_a: Profile = None, profile_b: Profile = None, *args, **kwargs):
+    def __init__(self, profile_a_path: str = None , profile_b_path: str = None, profile_merged_path: str = None, profile_a: Profile = None, profile_b: Profile = None, profile_merged: Profile = None, *args, **kwargs):
         self.profile_a = Profile(PROFILE_A, profile_a_path) if profile_a_path is not None else profile_a
         self.profile_b = Profile(PROFILE_B, profile_b_path) if profile_b_path is not None else profile_b
-        self.profile_merged = Profile(PROFILE_MERGED)
+        self.profile_merged = Profile(PROFILE_MERGED, profile_merged_path) if profile_merged_path is not None else profile_merged
         self.profiles = [self.profile_a, self.profile_b, self.profile_merged]
         self.merge_a_to_b = False
 
@@ -319,34 +337,3 @@ class ProfileMerger:
     def merge_and_save(self, profile_a_path: str=None , profile_b_path: str=None) -> bool:
         self.merge(profile_a_path, profile_b_path)
         return self.profile_merged.save_file()
-
-
-def parse_args():
-    """
-    Parses command line arguments to create a Profile Merger.
-
-    Returns:
-        argparse.Namespace: The parsed arguments.
-
-    Raises:
-        SystemExit: If required arguments are missing.
-    """
-    parser = argparse.ArgumentParser(description='Profile Merger')
-    parser.add_argument('-a', '--profile_a', required=True, help='Path to Profile A')
-    parser.add_argument('-b', '--profile_b', required=True, help='Path to Profile B')
-    parser.add_argument('-o', '--output', required=True, help='Output file')
-    parser.add_argument('-l', '--log', default=LOGFILE_NAME, help='Log file name')
-
-    return parser.parse_args()
-
-
-def main():
-    args = parse_args()
-    setup_logging(args.log)
-
-    merger = ProfileMerger(args.profile_a, args.profile_b)
-    merger.merge_and_save()
-
-
-if __name__ == '__main__':
-    main()
