@@ -12,3 +12,4 @@ ui/transferui.py
 tests/my_scripts
 /test_output.profile
 merged_profile.profile
+tests/test_log.log
